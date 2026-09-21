@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; manifest-src data:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://accounts.google.com; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://lh3.googleusercontent.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'none'; manifest-src data:">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AresFit">
@@ -15,6 +15,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href='data:application/manifest+json,{"name":"AresFit Dialer","short_name":"AresFit","start_url":".","display":"standalone","background_color":"%2308080d","theme_color":"%2308080d"}'>
 <link rel="icon" href="data:,">
+<script src="https://accounts.google.com/gsi/client" async defer data-aresfit-gis></script>
 <title>AresFit Dialer</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -932,8 +933,8 @@ body.light-mode .number-research-link{border-color:rgba(13,107,42,.42);backgroun
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.09.21.2';
-const RELEASE_ID = '20260921-google-calendar-sync-r2';
+const APP_BUILD = '2026.09.21.3';
+const RELEASE_ID = '20260921-google-calendar-sync-r3';
 const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1';
 const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
 const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
@@ -2062,11 +2063,7 @@ function queueGoogleCalendarLeadSync(l){
   if(!googleCalendarConnected()){
     gcalPendingFullSync=true;
     renderGoogleCalendarSettings();
-    if(googleCalendarClientId()){
-      requestGoogleCalendarToken('').then(()=>syncLeadToGoogleCalendar(l,{quiet:true})).catch(err=>{
-        showToast(err&&err.message?err.message:'Google Calendar needs reconnecting · callback remains in the app','danger');
-      });
-    }
+    if(googleCalendarClientId())showToast('Callback saved in app · tap Sync callbacks in Settings to reconnect Google Calendar','danger');
     return;
   }
   setTimeout(()=>syncLeadToGoogleCalendar(l,{quiet:true}).catch(err=>{
@@ -2122,14 +2119,9 @@ function queueCalendarFullSync(reason){
   renderGoogleCalendarSettings();
   if(googleCalendarConnected()){
     setTimeout(()=>syncAllCallbacksToGoogleCalendar({manual:false,reason:reason||''}),0);
-  }else if(googleCalendarClientId()){
-    requestGoogleCalendarToken('').then(()=>syncAllCallbacksToGoogleCalendar({manual:false,reason:reason||''})).catch(err=>{
-      const count=googleCalendarPendingCount();
-      if(count)showToast(count+' callback'+(count===1?'':'s')+' kept in app · reconnect Google Calendar to sync','danger');
-    });
   }else{
     const count=googleCalendarPendingCount();
-    if(count)showToast(count+' callback'+(count===1?'':'s')+' ready for Google Calendar · connect in Settings');
+    if(count)showToast(count+' callback'+(count===1?'':'s')+' ready for Google Calendar · use Connect/Sync in Settings');
   }
 }
 
