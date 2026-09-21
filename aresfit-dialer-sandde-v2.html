@@ -601,6 +601,14 @@ body.light-mode .number-research-link{border-color:rgba(13,107,42,.42);backgroun
     <h2>Sender</h2>
     <p style="font-size:12px;margin-bottom:8px;color:var(--txt2)"><strong style="color:var(--txt)" id="st-name"></strong><br><span id="st-email"></span></p>
     <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="openSetup()">Edit sender</button>
+    <h2>Google Calendar</h2>
+    <p class="sub" id="gcal-status" style="font-size:11px;margin-bottom:6px">Not connected</p>
+    <input type="text" id="gcal-client-id" placeholder="Google OAuth Client ID" oninput="saveGoogleCalendarClientId(this.value)" style="margin-bottom:6px">
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <button class="btn-red" type="button" style="flex:1;padding:10px" onclick="connectGoogleCalendar()">Connect Calendar</button>
+      <button class="btn-ghost" type="button" style="flex:1" onclick="syncAllCallbacksToGoogleCalendar({manual:true})">Sync callbacks</button>
+    </div>
+    <button class="btn-ghost" type="button" style="width:100%;margin-bottom:14px" onclick="disconnectGoogleCalendar()">Disconnect Calendar (events stay)</button>
     <h2>Data</h2>
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportEventLog()">Export event log</button>
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportNotionDelta()">Export Notion delta</button>
@@ -924,8 +932,8 @@ body.light-mode .number-research-link{border-color:rgba(13,107,42,.42);backgroun
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.08.25.2';
-const RELEASE_ID = '20260825-owr-001-mobile-sticky-r1';
+const APP_BUILD = '2026.09.21.1';
+const RELEASE_ID = '20260921-google-calendar-sync-r1';
 const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1';
 const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
 const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
@@ -1183,7 +1191,7 @@ let manualNoteText='';    // draft text for the manual-note editor
 let openMoreDetailsLeadId=null; // preserves the current lead's disclosure through render-triggering edits
 let dueQueueIdx=0;        // index for cycling through overdue/due banner
 let user={name:'', email:''};
-let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null, queueBannerCollapsed:true, diagnostics:{}};
+let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null, queueBannerCollapsed:true, diagnostics:{}, googleCalendarClientId:''};
 let idb=null;
 let outcomesSinceBackup=0;
 let timeEditContext=null; // {leadId, noteId} for time-modal
@@ -1192,6 +1200,14 @@ let lastToastTs=0;
 let saveTimer=null;
 let pendingSessionState=null;
 let lastExternalLaunchAt=0;
+const GCAL_SCOPE='https://www.googleapis.com/auth/calendar.events';
+const GCAL_TIME_ZONE='Europe/London';
+const GCAL_SESSION_KEY='aresfit_gcal_session_v1';
+let gcalAccessToken='';
+let gcalTokenExpiry=0;
+let gcalSyncRunning=false;
+let gcalPendingFullSync=false;
+let gcalLastSyncText='';
 
 // ===== Utils =====
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -1774,6 +1790,285 @@ function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs))}c
 function loadEventLog(){try{const rows=JSON.parse(localStorage.getItem(EVENT_LOG_STORAGE_KEY));eventLog=Array.isArray(rows)?rows:[]}catch(e){eventLog=[]}}
 function saveEventLog(){try{localStorage.setItem(EVENT_LOG_STORAGE_KEY,JSON.stringify(eventLog))}catch(e){}}
 
+// ===== Google Calendar sync =====
+// Access tokens live in sessionStorage only. The OAuth client ID is public configuration and may live in prefs.
+function googleCalendarClientId(){return String(prefs.googleCalendarClientId||'').trim()}
+function saveGoogleCalendarClientId(v){
+  prefs.googleCalendarClientId=String(v||'').trim();
+  savePrefs();
+  renderGoogleCalendarSettings();
+}
+function restoreGoogleCalendarSession(){
+  try{
+    const saved=JSON.parse(sessionStorage.getItem(GCAL_SESSION_KEY)||'null');
+    if(saved&&saved.token&&saved.expiry>Date.now()+60000){
+      gcalAccessToken=saved.token;
+      gcalTokenExpiry=saved.expiry;
+    }else{
+      sessionStorage.removeItem(GCAL_SESSION_KEY);
+    }
+  }catch(e){}
+}
+function persistGoogleCalendarSession(){
+  try{
+    if(gcalAccessToken&&gcalTokenExpiry>Date.now()){
+      sessionStorage.setItem(GCAL_SESSION_KEY,JSON.stringify({token:gcalAccessToken,expiry:gcalTokenExpiry}));
+    }else{
+      sessionStorage.removeItem(GCAL_SESSION_KEY);
+    }
+  }catch(e){}
+}
+function clearGoogleCalendarToken(){
+  gcalAccessToken='';
+  gcalTokenExpiry=0;
+  persistGoogleCalendarSession();
+  renderGoogleCalendarSettings();
+}
+function googleCalendarConnected(){return !!gcalAccessToken&&gcalTokenExpiry>Date.now()+30000}
+function googleCalendarPendingCount(){
+  return leads.filter(l=>isActiveCallbackRow(l)&&calendarTimingForLead(l)).length;
+}
+function renderGoogleCalendarSettings(){
+  const input=document.getElementById('gcal-client-id');
+  if(input&&input.value!==googleCalendarClientId())input.value=googleCalendarClientId();
+  const status=document.getElementById('gcal-status');
+  if(!status)return;
+  const pending=googleCalendarPendingCount();
+  if(googleCalendarConnected()){
+    status.textContent='Connected · '+pending+' callback'+(pending===1?'':'s')+' available to sync'+(gcalLastSyncText?' · '+gcalLastSyncText:'');
+  }else if(googleCalendarClientId()){
+    status.textContent='Client ID saved · Calendar not connected'+(pending?' · '+pending+' callback'+(pending===1?'':'s')+' waiting to sync':'');
+  }else{
+    status.textContent='Add your Google OAuth Client ID, then connect. Existing imported callback dates will sync after connection.';
+  }
+}
+function loadGoogleIdentityServices(){
+  if(window.google&&google.accounts&&google.accounts.oauth2)return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const existing=document.querySelector('script[data-aresfit-gis]');
+    if(existing){
+      existing.addEventListener('load',()=>resolve(),{once:true});
+      existing.addEventListener('error',()=>reject(new Error('Google sign-in library failed to load')),{once:true});
+      return;
+    }
+    const s=document.createElement('script');
+    s.src='https://accounts.google.com/gsi/client';
+    s.async=true;s.defer=true;s.dataset.aresfitGis='1';
+    s.onload=()=>resolve();
+    s.onerror=()=>reject(new Error('Google sign-in library failed to load'));
+    document.head.appendChild(s);
+  });
+}
+async function requestGoogleCalendarToken(promptMode){
+  const clientId=googleCalendarClientId();
+  if(!clientId)throw new Error('Google OAuth Client ID is required in Settings.');
+  await loadGoogleIdentityServices();
+  return new Promise((resolve,reject)=>{
+    const client=google.accounts.oauth2.initTokenClient({
+      client_id:clientId,
+      scope:GCAL_SCOPE,
+      callback:(response)=>{
+        if(response&&response.access_token){
+          gcalAccessToken=response.access_token;
+          gcalTokenExpiry=Date.now()+Math.max(60,Number(response.expires_in||3600))*1000;
+          persistGoogleCalendarSession();
+          renderGoogleCalendarSettings();
+          resolve(gcalAccessToken);
+        }else{
+          reject(new Error((response&&response.error_description)||'Google Calendar authorization failed'));
+        }
+      },
+      error_callback:(err)=>reject(new Error((err&&err.message)||'Google Calendar authorization failed'))
+    });
+    client.requestAccessToken({prompt:promptMode||''});
+  });
+}
+async function connectGoogleCalendar(){
+  try{
+    await requestGoogleCalendarToken('consent');
+    showToast('Google Calendar connected');
+    gcalPendingFullSync=true;
+    await syncAllCallbacksToGoogleCalendar({manual:false});
+  }catch(err){
+    showToast(err&&err.message?err.message:'Google Calendar connection failed','danger');
+  }
+}
+function disconnectGoogleCalendar(){
+  clearGoogleCalendarToken();
+  gcalLastSyncText='';
+  showToast('Google Calendar disconnected · existing Calendar events kept');
+}
+async function googleCalendarRequest(path,options){
+  if(!googleCalendarConnected())throw new Error('Google Calendar is not connected.');
+  const opts=options||{};
+  const headers={Authorization:'Bearer '+gcalAccessToken};
+  if(opts.body!==undefined)headers['Content-Type']='application/json';
+  const res=await fetch('https://www.googleapis.com/calendar/v3'+path,{
+    method:opts.method||'GET',
+    headers,
+    body:opts.body===undefined?undefined:JSON.stringify(opts.body)
+  });
+  if(res.status===401){
+    clearGoogleCalendarToken();
+    throw new Error('Google Calendar connection expired · reconnect in Settings.');
+  }
+  if(!res.ok){
+    let detail='';
+    try{const body=await res.json();detail=body&&body.error&&body.error.message?body.error.message:''}catch(e){}
+    throw new Error(detail||('Google Calendar error '+res.status));
+  }
+  if(res.status===204)return null;
+  return res.json();
+}
+function calendarCallbackKey(l){
+  const leadId=String(getLeadId(l)||'').trim();
+  if(leadId)return 'lead:'+leadId;
+  const biz=String(l.business||'').trim().toLowerCase().replace(/\s+/g,' ').slice(0,120);
+  const phone=normaliseLeadPhone(l.phone||'');
+  return 'biz:'+biz+'|phone:'+phone;
+}
+function calendarLocalDateTime(y,mo,d,h,mi){
+  return String(y)+'-'+pad2(mo)+'-'+pad2(d)+'T'+pad2(h)+':'+pad2(mi)+':00';
+}
+function calendarTimingForLead(l){
+  const raw=String(l.cbDate||l.followUp||'').trim();
+  const parts=callbackDisplayParts(raw);
+  if(!parts.ok)return null;
+  const sh=parts.hasTime?parts.h:9;
+  const sm=parts.hasTime?parts.mi:0;
+  let eh=sh,em=sm+15,ey=parts.y,emo=parts.mo,ed=parts.d;
+  const explicit=String(l.cbEndTime||parts.rangeEnd||'').trim().match(/^(\d{1,2}):(\d{2})$/);
+  if(explicit){
+    eh=+explicit[1];em=+explicit[2];
+  }
+  const startDate=new Date(parts.y,parts.mo-1,parts.d,sh,sm,0,0);
+  let endDate=new Date(parts.y,parts.mo-1,parts.d,eh,em,0,0);
+  if(!explicit||endDate<=startDate)endDate=new Date(startDate.getTime()+15*60*1000);
+  ey=endDate.getFullYear();emo=endDate.getMonth()+1;ed=endDate.getDate();eh=endDate.getHours();em=endDate.getMinutes();
+  return{
+    start:{dateTime:calendarLocalDateTime(parts.y,parts.mo,parts.d,sh,sm),timeZone:GCAL_TIME_ZONE},
+    end:{dateTime:calendarLocalDateTime(ey,emo,ed,eh,em),timeZone:GCAL_TIME_ZONE},
+    importedDateOnly:!parts.hasTime
+  };
+}
+function calendarEventBodyForLead(l){
+  const timing=calendarTimingForLead(l);
+  if(!timing)return null;
+  const key=calendarCallbackKey(l);
+  const details=[
+    'AresFit callback',
+    'Business: '+String(l.business||''),
+    'Lead ID: '+String(getLeadId(l)||'-'),
+    'Sheet row: R'+String(l.row||''),
+    'Phone: '+String(l.phone||''),
+    'DM: '+String(l.dm||'-'),
+    'Source CSV: '+String(sourceMeta.fileName||'-')
+  ];
+  if(timing.importedDateOnly)details.push('Imported date-only callback: Calendar time defaulted to 09:00.');
+  return{
+    summary:'AresFit callback - '+String(l.business||'Unknown lead'),
+    description:details.join('\n'),
+    start:timing.start,
+    end:timing.end,
+    reminders:{useDefault:false,overrides:[{method:'popup',minutes:10},{method:'popup',minutes:0}]},
+    extendedProperties:{private:{aresfitCallbackKey:key,aresfitSource:'new-dialer'}}
+  };
+}
+async function calendarFindEventsForLead(l){
+  const key=calendarCallbackKey(l);
+  const q=encodeURIComponent('aresfitCallbackKey='+key);
+  const data=await googleCalendarRequest('/calendars/primary/events?singleEvents=true&showDeleted=false&maxResults=10&privateExtendedProperty='+q);
+  return data&&Array.isArray(data.items)?data.items:[];
+}
+async function syncLeadToGoogleCalendar(l,opts){
+  const options=opts||{};
+  if(!l)return{status:'skipped'};
+  if(!googleCalendarConnected()){
+    gcalPendingFullSync=true;
+    renderGoogleCalendarSettings();
+    return{status:'pending'};
+  }
+  const body=calendarEventBodyForLead(l);
+  if(!body||!isActiveCallbackRow(l)){
+    return deleteLeadFromGoogleCalendar(l,{quiet:true});
+  }
+  const existing=await calendarFindEventsForLead(l);
+  if(existing.length){
+    await googleCalendarRequest('/calendars/primary/events/'+encodeURIComponent(existing[0].id),{method:'PATCH',body});
+    if(!options.quiet)showToast('Google Calendar callback updated');
+    return{status:'updated'};
+  }
+  await googleCalendarRequest('/calendars/primary/events',{method:'POST',body});
+  if(!options.quiet)showToast('Callback added to Google Calendar');
+  return{status:'created'};
+}
+async function deleteLeadFromGoogleCalendar(l,opts){
+  const options=opts||{};
+  if(!l||!googleCalendarConnected())return{status:'pending'};
+  const existing=await calendarFindEventsForLead(l);
+  for(const ev of existing){
+    await googleCalendarRequest('/calendars/primary/events/'+encodeURIComponent(ev.id),{method:'DELETE'});
+  }
+  if(existing.length&&!options.quiet)showToast('Callback removed from Google Calendar');
+  return{status:existing.length?'deleted':'missing'};
+}
+function queueGoogleCalendarLeadSync(l){
+  if(!l)return;
+  if(!googleCalendarConnected()){
+    gcalPendingFullSync=true;
+    renderGoogleCalendarSettings();
+    return;
+  }
+  setTimeout(()=>syncLeadToGoogleCalendar(l,{quiet:true}).catch(err=>{
+    gcalLastSyncText='sync issue';
+    renderGoogleCalendarSettings();
+    showToast(err&&err.message?err.message:'Google Calendar sync failed','danger');
+  }),0);
+}
+function queueGoogleCalendarDelete(l){
+  if(!l||!googleCalendarConnected())return;
+  setTimeout(()=>deleteLeadFromGoogleCalendar(l,{quiet:true}).catch(err=>showToast(err&&err.message?err.message:'Google Calendar delete failed','danger')),0);
+}
+async function syncAllCallbacksToGoogleCalendar(options){
+  const opts=options||{};
+  if(gcalSyncRunning)return;
+  if(!googleCalendarConnected()){
+    gcalPendingFullSync=true;
+    renderGoogleCalendarSettings();
+    if(opts.manual)showToast('Connect Google Calendar first','danger');
+    return;
+  }
+  const rows=leads.filter(l=>isActiveCallbackRow(l)&&calendarTimingForLead(l));
+  gcalSyncRunning=true;
+  let created=0,updated=0,failed=0;
+  renderGoogleCalendarSettings();
+  try{
+    for(const l of rows){
+      try{
+        const result=await syncLeadToGoogleCalendar(l,{quiet:true});
+        if(result.status==='created')created++;
+        if(result.status==='updated')updated++;
+      }catch(err){failed++}
+    }
+    gcalPendingFullSync=false;
+    gcalLastSyncText=(created+updated)+' synced'+(failed?' · '+failed+' failed':'');
+    renderGoogleCalendarSettings();
+    showToast('Google Calendar: '+(created+updated)+' callback'+((created+updated)===1?'':'s')+' synced'+(failed?' · '+failed+' failed':''));
+  }finally{
+    gcalSyncRunning=false;
+  }
+}
+function queueCalendarFullSync(reason){
+  gcalPendingFullSync=true;
+  renderGoogleCalendarSettings();
+  if(googleCalendarConnected()){
+    setTimeout(()=>syncAllCallbacksToGoogleCalendar({manual:false,reason:reason||''}),0);
+  }else{
+    const count=googleCalendarPendingCount();
+    if(count)showToast(count+' callback'+(count===1?'':'s')+' ready for Google Calendar · connect in Settings');
+  }
+}
+
 // ===== Setup / user =====
 function loadUser(){try{const u=JSON.parse(localStorage.getItem(SETUP_KEY));if(u&&u.name){user=u;return true}}catch(e){}return false}
 function openSetup(){
@@ -1819,6 +2114,7 @@ function openSettings(){
   const sel=document.getElementById('cl-scheme-sel');
   if(sel)sel.innerHTML=CL_SCHEME_OPTIONS.map(o=>`<option value="${esc(o.value)}"${(prefs.clScheme||CL_SCHEME_DEFAULT)===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
   renderQueueGateControls();
+  renderGoogleCalendarSettings();
   applyTheme();
   const build=document.getElementById('settings-build');if(build)build.textContent=`AresFit Dialer - build ${APP_BUILD} - ${RELEASE_ID}`;
   renderDiagnostics();
@@ -2363,6 +2659,7 @@ function confirmImport(){
   previousImportSnapshot=null;
   document.getElementById('map-modal').style.display='none';
   restoreLeadQueue(null);showApp();save(true);render();
+  queueCalendarFullSync('csv-import');
 }
 function showApp(){document.getElementById('upload-screen').style.display='none';document.getElementById('main-app').style.display='block'}
 
@@ -2935,11 +3232,13 @@ function saveCbEdit(){
   l.cbEndTime=document.getElementById('cbe-end').value||'';
   l.cbSetAt=Date.now();
   save();closeCbEdit();renderCard();renderLeadList();renderDueQueueBanner();
+  if(l.cbDate)queueGoogleCalendarLeadSync(l);else queueGoogleCalendarDelete(l);
   showToast(l.cbDate?'Callback updated':'Callback cleared');
 }
 function clearCbEdit(){
   const l=filtered[idx];if(!l){closeCbEdit();return}
   if(!confirm('Clear the scheduled callback? (Also clears Follow-up Date. Notes history untouched.)'))return;
+  queueGoogleCalendarDelete(l);
   l.cbDate='';l.cbEndTime='';l.cbSetAt=0;l.followUp='';
   save();closeCbEdit();renderCard();renderLeadList();renderDueQueueBanner();
   showToast('Callback cleared');
@@ -2949,6 +3248,7 @@ function clearCbEdit(){
 function clearCbFromBanner(id){
   const l=leads.find(x=>x.id===id);if(!l)return;
   if(!confirm('Clear this callback permanently? (Also clears Follow-up Date. Notes history untouched.)'))return;
+  queueGoogleCalendarDelete(l);
   l.cbDate='';l.cbEndTime='';l.cbSetAt=0;l.followUp='';
   save();renderCard();renderLeadList();renderDueQueueBanner();
   showToast('Callback cleared');
@@ -3717,6 +4017,7 @@ function commitPending(){
   const rules=OUTCOME_AUTO_SET[p.outcome]||[];
   rules.forEach(rule=>{if(rule.safe.includes((l[rule.field]||'').trim()))l[rule.field]=rule.value});
   if(p.outcome==='Provider Reject'){l.status='DO NOT CALL';l.stage='Lost';l.providerReject=true}
+  if(p.outcome==='Callback')queueGoogleCalendarLeadSync(l);
   // Clear pending
   l.pending={outcome:'',text:'',callStartTs:0,editedHm:'',speakerRole:''};
   outcomesSinceBackup++;
@@ -4304,6 +4605,7 @@ function exportCircleLoopContacts(dedupeSet,opts){
 // ===== Init =====
 async function initialiseApp(){
   loadPrefs();
+  restoreGoogleCalendarSession();
   applyTheme();
   loadEventLog();
   const hasUserSetup=loadUser();
