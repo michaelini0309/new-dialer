@@ -1,0 +1,7 @@
+timestamp,rep,row_number,lead_id,business_name,phone,email,channel,outcome,reason,next_action,next_action_date,owner,proof_source,quote_value,blocked_value,blocker_type,notes
+2026-06-21T09:00:00+00:00,Sandde,1,lead-001,Alpha Gym,01234000001,alpha@example.com,call,reached,,send follow-up,2026-06-22,Sandde,CircleLoop dial tap,,,,Spoke to owner
+2026-06-21T09:10:00+00:00,Sandde,2,lead-002,Beta Gym,01234000002,beta@example.com,email,email sent,,follow up,2026-06-24,Sandde,Gmail compose launched,,,,Gmail compose launched
+2026-06-21T09:20:00+00:00,Sandde,3,lead-003,Quote Gym,01234000003,quote@example.com,quote,quote needed,,send quote,2026-06-21,Sandde,manual quote log,12500,,,Needs quote for cardio kit
+2026-06-21T09:30:00+00:00,Sandde,4,lead-004,Supplier Gym,01234000004,supplier@example.com,supplier,supplier needed,,check supplier,2026-06-22,Sandde,manual supplier log,,7500,supplier,Waiting on supplier pricing
+2026-06-21T09:40:00+00:00,Sandde,5,lead-005,Issue Gym,01234000005,issue@example.com,app issue,app issue,,fix export,2026-06-21,Sandde,manual app issue log,,100,app/CircleLoop,Export failed in app
+2026-06-21T09:50:00+00:00,Sandde,6,lead-006,Lost Gym,01234000006,lost@example.com,call,lost,no budget,lost,,Sandde,manual call outcome,,,,Declined due to no budget
