@@ -933,8 +933,8 @@ body.light-mode .number-research-link{border-color:rgba(13,107,42,.42);backgroun
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.09.21.3';
-const RELEASE_ID = '20260921-google-calendar-sync-r3';
+const APP_BUILD = '2026.09.21.4';
+const RELEASE_ID = '20260921-google-calendar-sync-r4';
 const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1';
 const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
 const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
@@ -1446,8 +1446,11 @@ function callbackPartsValid(y,mo,d,h=0,mi=0,sec=0,hasTime=false){
   return !hasTime||(check.getHours()===h&&check.getMinutes()===mi&&check.getSeconds()===sec);
 }
 function callbackDisplayParts(value){
-  const clean=String(value||'').trim().replace(/[–—−]/g,'-').replace(/\s+/g,' ');
+  let clean=String(value||'').trim().replace(/[–—−]/g,'-').replace(/\s+/g,' ');
   if(!clean)return{ok:false,empty:true,label:''};
+  // Calendar/import sheets sometimes append a condition after a valid schedule,
+  // e.g. "2026-09-18 12:00-14:00 if no email reply".
+  clean=clean.replace(/^(\d{4}-\d{2}-\d{2}(?:[T ]\d{1,2}:\d{2}(?:\s*-\s*\d{1,2}:\d{2})?|\s+(?:after|from|at|around)\s+\d{1,2}:\d{2})?).*$/i,'$1');
   let m;
   m=clean.match(/^(\d{4})-(\d{2})-(\d{2})\s+(?:after|from|at|around)\s+(\d{1,2}):(\d{2})$/i);
   if(m){
@@ -1582,10 +1585,10 @@ function isActiveCallbackRow(l){
 function isGoogleCalendarCallbackRow(l){
   if(!l)return false;
   const st=String(l.status||'').trim().toLowerCase();
-  if(!st||st==='do not call'||st==='awaiting callback')return false;
-  if(st==='callback')return true;
-  if(st.includes('callback')&&!st.includes('awaiting'))return true;
-  return false;
+  if(st==='do not call')return false;
+  // Calendar sync is schedule-driven: any lead with a real callback/follow-up date
+  // is eligible, even when the sheet status says Voicemail, HOT, Retry, etc.
+  return !!calendarTimingForLead(l);
 }
 function callbackOverrideForLead(l){
   if(!l)return null;
@@ -1848,11 +1851,15 @@ function clearGoogleCalendarToken(){
 }
 function googleCalendarConnected(){return !!gcalAccessToken&&gcalTokenExpiry>Date.now()+30000}
 function googleCalendarPendingCount(){
-  return leads.filter(l=>isGoogleCalendarCallbackRow(l)&&calendarTimingForLead(l)).length;
+  return leads.filter(l=>{
+    const st=String(l.status||'').trim().toLowerCase();
+    return st!=='do not call'&&!!calendarTimingForLead(l);
+  }).length;
 }
 function googleCalendarInvalidCount(){
   return leads.filter(l=>{
-    if(!isGoogleCalendarCallbackRow(l))return false;
+    const st=String(l.status||'').trim().toLowerCase();
+    if(st==='do not call')return false;
     const raw=String(l.cbDate||l.followUp||'').trim();
     return !!raw&&!calendarTimingForLead(l);
   }).length;
@@ -2094,7 +2101,7 @@ async function syncAllCallbacksToGoogleCalendar(options){
       return;
     }
   }
-  const rows=leads.filter(l=>isGoogleCalendarCallbackRow(l)&&calendarTimingForLead(l));
+  const rows=leads.filter(l=>isGoogleCalendarCallbackRow(l));
   gcalSyncRunning=true;
   let created=0,updated=0,failed=0;
   renderGoogleCalendarSettings();
@@ -2107,9 +2114,14 @@ async function syncAllCallbacksToGoogleCalendar(options){
       }catch(err){failed++}
     }
     gcalPendingFullSync=false;
-    gcalLastSyncText=(created+updated)+' synced'+(failed?' · '+failed+' failed':'');
+    const totalSynced=created+updated;
+    gcalLastSyncText=totalSynced+' synced'+(failed?' · '+failed+' failed':'');
     renderGoogleCalendarSettings();
-    showToast('Google Calendar: '+(created+updated)+' callback'+((created+updated)===1?'':'s')+' synced'+(failed?' · '+failed+' failed':''));
+    if(!rows.length){
+      showToast('Google Calendar: 0 eligible dated callbacks found','danger');
+    }else{
+      showToast('Google Calendar: '+totalSynced+' callback'+(totalSynced===1?'':'s')+' synced'+(failed?' · '+failed+' failed':''));
+    }
   }finally{
     gcalSyncRunning=false;
   }
