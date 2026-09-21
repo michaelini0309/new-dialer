@@ -1,0 +1,2589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AresFit S">
+<meta name="theme-color" content="#08080d">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href='data:application/manifest+json,{"name":"AresFit Dialer Sandde","short_name":"AresFitS","start_url":".","display":"standalone","background_color":"%2308080d","theme_color":"%2308080d","icons":[{"src":"data:image/svg%2Bxml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 rx=%2232%22 fill=%22%2308080d%22/><text x=%2296%22 y=%22130%22 font-size=%22110%22 text-anchor=%22middle%22>🏋️</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏋️</text></svg>'>
+<title>AresFit Dialer · Sandde v1</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html,body{-webkit-text-size-adjust:100%;overscroll-behavior:none}
+:root{--bg:#000;--panel:#0a0a0a;--card:#111;--border:#222;--border2:#2e2e2e;--red:#ff3355;--red2:#ff5577;--green:#3ddc84;--amber:#ffb020;--blue:#5a9cff;--purple:#b388ff;--danger:#ff2e4d;--txt:#fafafa;--txt2:#8a8a8a;--txt3:#505050;--font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace}
+/* Light theme — toggled via body.light-mode. Inverts surfaces, keeps semantic colours. */
+body.light-mode{--bg:#fafafa;--panel:#ffffff;--card:#f0f0f0;--border:#d8d8d8;--border2:#bbbbbb;--txt:#0a0a0a;--txt2:#5a5a5a;--txt3:#9a9a9a;--red:#d50000;--red2:#b71c1c;--green:#1b8a3d;--amber:#c77800;--blue:#0066cc;--purple:#6a3ec7;--danger:#cc0033}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);min-height:100vh}
+*::-webkit-scrollbar{width:6px;height:6px}
+*::-webkit-scrollbar-track{background:#0a0a14}
+*::-webkit-scrollbar-thumb{background:#252538;border-radius:3px}
+
+/* Layout */
+.app{max-width:640px;margin:0 auto;padding:10px;padding-bottom:40px}
+.sticky-top{position:sticky;top:0;z-index:50;background:var(--bg);padding-top:6px;margin:-10px -10px 8px;padding:10px 10px 8px;border-bottom:1px solid var(--border)}
+.head-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.logo{font-size:15px;font-weight:800;letter-spacing:.08em;flex:1;color:var(--txt)}
+.logo span{color:var(--txt);font-weight:800}
+.save-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--txt3);margin-left:6px;vertical-align:middle;transition:background .25s}
+.save-dot.ok{background:var(--green);box-shadow:0 0 8px rgba(0,230,118,.6)}
+.save-dot.fail{background:var(--danger)}
+.save-dot.pulse{animation:pulse .6s ease-out}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.stat{background:var(--card);padding:8px 6px;border-radius:9px;border:1px solid var(--border);text-align:center}
+.stat-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--txt);line-height:1.1}
+.stat-lbl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+
+/* Call block banner */
+.block-banner{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:12px;font-weight:600;border:2px solid;display:flex;align-items:center;gap:8px}
+.block-banner .ico{font-size:16px}
+.block-banner .msg{flex:1}
+.block-banner.prime{background:rgba(0,230,118,.08);border-color:var(--green);color:var(--green)}
+.block-banner.secondary{background:rgba(255,171,0,.08);border-color:var(--amber);color:var(--amber)}
+.block-banner.dead{background:rgba(255,23,68,.1);border-color:var(--danger);color:var(--red2)}
+
+/* Buttons */
+button{font-family:var(--font);cursor:pointer;border:none;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--txt);transition:transform .1s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-red{background:#fff;color:#000}
+.btn-ghost{background:var(--card);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border2)}
+.btn-sm{padding:6px 10px;font-size:11px;border-radius:7px}
+
+/* Inputs */
+input,textarea,select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--txt);font-family:var(--font);font-size:13px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red)}
+textarea{resize:vertical;min-height:70px}
+textarea.pending{border-color:var(--amber);box-shadow:0 0 0 2px rgba(255,171,0,.12)}
+select{appearance:none;-webkit-appearance:none;padding-right:28px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238e8ea0' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 10px center;color-scheme:dark}
+option{background:#131320;color:#e4e4ec;padding:6px}
+
+/* Custom dropdown (Status/Stage) */
+.dd{position:relative;padding:5px 22px 5px 2px;font-size:13px;border-bottom:1px solid var(--border);cursor:pointer;color:var(--txt);user-select:none}
+.dd-val{min-height:18px;display:flex;align-items:center}
+.dd-caret{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:9px}
+.dd-list{display:none;position:absolute;left:-10px;right:-10px;top:calc(100% + 4px);background:#131320;border:1px solid var(--border2);border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.7);z-index:20;max-height:300px;overflow-y:auto}
+.dd.open .dd-list{display:block}
+.dd-opt{padding:9px 12px;font-size:13px;color:var(--txt);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03)}
+.dd-opt:last-child{border-bottom:none}
+.dd-opt:hover{background:#fff;color:#000}
+.dd-opt.selected{color:var(--red2);font-weight:600}
+.dd-opt.selected:hover{background:#fff;color:#000}
+
+/* Gates (P1) */
+.gate{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin:10px 0}
+.gate.pre{border-left:4px solid var(--amber)}
+.gate.mobile{border-left:4px solid var(--danger);background:rgba(255,23,68,.06)}
+.gate h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:6px;font-weight:700}
+.gate.mobile h4{color:var(--danger)}
+.gate label{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--txt);cursor:pointer}
+.gate input[type=checkbox]{width:16px;height:16px;accent-color:var(--green);flex:0 0 auto;cursor:pointer}
+.gate .hint{font-size:10px;color:var(--txt3);margin-top:4px;line-height:1.4}
+
+/* Deconflict + dead air (P2) */
+.flag-bar{background:rgba(255,171,0,.12);border-left:3px solid var(--amber);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--amber);margin-bottom:8px}
+.flag-bar.danger{background:rgba(255,23,68,.1);border-left-color:var(--danger);color:var(--red2)}
+.deconflict-toggle{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt3);margin-top:6px;padding:4px 0;cursor:pointer}
+.deconflict-toggle input{width:14px;height:14px;accent-color:var(--amber)}
+
+/* Brand swap chip (P2) */
+.swap-chip{display:inline-block;background:linear-gradient(135deg,rgba(255,59,92,.18),rgba(255,171,0,.15));border:1px solid var(--amber);border-radius:8px;padding:7px 11px;margin-top:6px;font-size:11px;cursor:pointer;color:var(--amber);line-height:1.35;animation:fadein .25s}
+.swap-chip .brand{color:#fff;font-weight:700}
+.swap-chip:hover{background:var(--amber);color:#000}
+.swap-chip:hover .brand{color:#000}
+@keyframes fadein{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+
+/* Due banner (P3) */
+.due-banner{background:linear-gradient(135deg,#3a1a00,#2a1500);border:2px solid var(--amber);border-radius:10px;padding:10px 12px;margin-bottom:10px;animation:pulse-border-amber 2s infinite}
+.due-banner.overdue{background:linear-gradient(135deg,#2a0505,#1a0303);border-color:var(--danger);animation:pulse-border-red 2s infinite}
+@keyframes pulse-border-amber{0%,100%{box-shadow:0 0 0 rgba(255,171,0,0)}50%{box-shadow:0 0 16px rgba(255,171,0,.4)}}
+@keyframes pulse-border-red{0%,100%{box-shadow:0 0 0 rgba(255,46,77,0)}50%{box-shadow:0 0 16px rgba(255,46,77,.45)}}
+.due-banner h3{font-size:11px;text-transform:uppercase;font-weight:800;color:var(--amber);margin-bottom:4px}
+.due-banner.overdue h3{color:var(--danger)}
+.due-banner .biz{font-size:14px;font-weight:700;color:#fff}
+.due-banner-btns{display:flex;gap:6px;margin-top:8px}
+.due-banner .jump{background:var(--amber);color:#000;flex:1;padding:8px;font-size:12px;font-weight:700;border-radius:8px;border:none;cursor:pointer}
+.due-banner.overdue .jump{background:var(--danger);color:#fff}
+.due-banner .dismiss{background:transparent;color:var(--txt2);border:1px solid var(--border2);padding:8px 12px;font-size:11px;border-radius:8px;cursor:pointer}
+
+/* Email button (P3) */
+.email-btn{width:100%;background:transparent;color:var(--txt);padding:14px 16px;font-size:14px;font-weight:700;line-height:1.4;border-radius:12px;margin:10px 0 14px;border:2px solid #fff;cursor:pointer;text-align:center;word-break:break-word}
+.email-btn:hover{background:#fff;color:#000}
+.email-btn:active{transform:scale(.98)}
+
+/* Toast (P1/P3) */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--amber);border-left:4px solid var(--amber);border-radius:10px;padding:12px 18px;font-size:12px;color:var(--amber);z-index:300;max-width:90%;box-shadow:0 8px 30px rgba(0,0,0,.7);animation:slideup .3s;font-weight:600}
+.toast.danger{border-color:var(--danger);border-left-color:var(--danger);color:var(--red2)}
+@keyframes slideup{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* DNC row marker (P1) */
+.lead-item.dnc-row{background:rgba(255,23,68,.08)!important;border-left-color:var(--danger)!important}
+
+/* Overdue / due-today row flags in lead list */
+.lead-item.overdue-row{border-left-color:var(--danger)!important;background:rgba(255,23,68,.05)}
+.lead-item.due-today-row{border-left-color:var(--amber)!important;background:rgba(255,171,0,.05)}
+.fu-badge{font-size:8px;font-weight:800;padding:2px 5px;border-radius:4px;letter-spacing:.05em;font-family:var(--mono)}
+.fu-badge.overdue{background:var(--danger);color:#fff}
+.fu-badge.due{background:var(--amber);color:#000}
+
+/* Handover modal */
+.handover-box{background:#0a0a14;border:1px solid var(--border);border-radius:8px;padding:10px;font-family:var(--mono);font-size:10px;line-height:1.5;color:var(--txt2);max-height:320px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;margin:8px 0}
+.subj-pool textarea{min-height:140px;font-family:var(--mono);font-size:11px}
+
+/* Email composer modal (Ship 1) */
+.composer-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.c-row{margin-bottom:10px}
+.c-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.c-chk{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt);cursor:pointer;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.c-chk input{width:16px;height:16px;accent-color:var(--green)}
+.c-warn{background:rgba(255,171,0,.1);border-left:3px solid var(--amber);padding:8px 10px;font-size:11px;color:var(--amber);margin:4px 0;border-radius:6px;line-height:1.45}
+.c-warn.danger{background:rgba(255,23,68,.1);border-left-color:var(--danger);color:var(--red2)}
+.c-warn+.c-warn{margin-top:4px}
+#c-body{min-height:220px;font-size:13px;line-height:1.55}
+.tmpl-edit textarea{min-height:120px;font-family:var(--mono);font-size:11px;margin-bottom:8px}
+
+/* Call card */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
+.row-line{font-family:var(--mono);font-size:11px;color:var(--txt3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row-line .pri{color:var(--amber);font-weight:700}
+.row-line .pri.top{color:var(--red2)}
+.row-line .r{color:var(--red2);font-weight:700}
+.row-line .att{background:var(--border2);padding:1px 6px;border-radius:10px;color:var(--txt);font-weight:600}
+.biz-head{font-size:22px;font-weight:800;line-height:1.15;margin-bottom:3px;word-break:break-word}
+.sub{color:var(--txt2);font-size:12px}
+
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.field{background:var(--card);padding:8px 9px;border-radius:8px;border:1px solid var(--border);cursor:pointer;min-height:42px}
+.field.full{grid-column:1 / -1}
+.field:hover{border-color:var(--border2)}
+.field-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center}
+.field-lbl .edit{color:var(--txt3);font-size:8px}
+.field-val{font-size:13px;color:var(--txt);word-break:break-word;min-height:18px}
+.field-val.mono{font-family:var(--mono);font-size:14px;letter-spacing:.02em}
+.field-val.empty{color:var(--txt3);font-style:italic;font-size:12px}
+.field select{padding:5px 26px 5px 2px;font-size:12px;border:none;background-color:transparent;border-bottom:1px solid var(--border)}
+.field input{padding:4px 0;font-size:13px;background:transparent;border:none;border-bottom:1px solid var(--red)}
+.reveal{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:12px;color:var(--txt2)}
+.reveal summary{cursor:pointer;color:var(--txt);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.reveal summary::marker{color:var(--txt3)}
+.reveal div{margin-top:6px;white-space:pre-wrap;line-height:1.55}
+.ref-chip{display:inline-block;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:11px;color:var(--txt2);margin:2px 4px 2px 0}
+
+/* CALL button */
+.call-row{display:flex;gap:8px;margin:12px 0 10px}
+.call-btn{flex:1;padding:18px;font-size:19px;font-weight:800;border-radius:12px;background:#fff;color:#000;letter-spacing:.02em;border:none;cursor:pointer}
+.call-btn:active{transform:scale(.98)}
+.call-btn .n{font-family:var(--mono);font-size:15px;font-weight:700;display:block;margin-top:2px;opacity:.95}
+.copy-btn{width:54px;background:var(--card);border:1px solid var(--border);font-size:20px;border-radius:14px}
+.call-info{font-size:11px;padding:8px 10px;background:rgba(255,171,0,.08);border-left:3px solid var(--amber);border-radius:6px;margin-bottom:10px;color:var(--amber);display:none}
+.call-info.show{display:block}
+.call-info .t{font-family:var(--mono);font-weight:700}
+
+/* Outcomes */
+.outcomes{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.outcomes button{padding:14px 10px;font-size:13px;background:var(--card);border:1px solid var(--border);min-height:52px;line-height:1.2;border-radius:10px;font-weight:600}
+.outcomes button.sel{background:#fff;border-color:#fff;color:#000}
+.outcomes button[data-out="Provider Reject"].sel{background:var(--danger);border-color:var(--danger)}
+.outcomes button[data-out="HOT"].sel{background:#ff4081;border-color:#ff4081}
+.outcomes button[data-out="Callback"].sel{background:var(--amber);border-color:var(--amber);color:#000}
+
+/* Notes */
+.notes-wrap{margin-top:12px}
+.notes-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.notes-hist{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 11px;max-height:180px;overflow-y:auto;font-size:12px;line-height:1.55;color:var(--txt);white-space:pre-wrap;word-break:break-word;margin-bottom:6px}
+.notes-hist:empty::before{content:"No notes yet. Pick outcome below, type note, tap Next to log.";color:var(--txt3);font-style:italic;font-size:11px}
+.notes-hist .entry{padding:5px 6px;border-bottom:1px dashed rgba(255,255,255,.04);border-radius:4px;transition:background .12s}
+.notes-hist .entry:last-child{border-bottom:none}
+.notes-hist .entry:hover{background:rgba(255,255,255,.04)}
+.notes-hist .entry .ts{color:var(--red2);font-family:var(--mono);font-weight:600}
+.notes-hist .entry .oc{color:var(--amber);font-weight:700}
+.notes-hist .legacy{color:var(--txt2);font-size:11px;font-style:italic}
+.new-note-row{display:flex;gap:4px;align-items:flex-start}
+.new-note-row textarea{flex:1}
+.time-pill{font-family:var(--mono);font-size:10px;padding:4px 6px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--amber);cursor:pointer;white-space:nowrap;align-self:stretch;display:flex;align-items:center}
+.time-pill.unset{color:var(--txt3)}
+.note-warn{font-size:11px;color:var(--red2);margin-top:3px;display:none}
+.note-warn.show{display:block}
+
+/* Nav */
+.nav-row{display:flex;gap:6px;margin-top:10px;align-items:center}
+.nav-row .pos{flex:1;text-align:center;font-family:var(--mono);font-size:12px;color:var(--txt2)}
+.nav-row button{flex:0 0 auto;padding:10px 14px}
+.next-btn{background:#fff;color:#000}
+
+/* Toolbar bottom */
+.toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.toolbar button{font-size:11px;padding:9px 4px;background:var(--card);border:1px solid var(--border)}
+
+/* Upload screen */
+.upload-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.upload-card{max-width:520px;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;position:relative}
+.upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;background:#000;transition:all .2s;margin-top:14px}
+.upload-zone:hover,.upload-zone.drag{border-color:#fff;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 0 3px rgba(255,255,255,.04)}
+.upload-zone .big{font-size:38px}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto}
+.modal-box{background:var(--panel);border-radius:14px;padding:16px;max-width:600px;width:100%;border:1px solid var(--border);position:relative;margin-top:20px;margin-bottom:20px}
+.x-btn{position:absolute;top:10px;right:10px;background:none;color:var(--txt3);font-size:20px;padding:4px 10px}
+.x-btn:hover{color:var(--txt)}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3);margin-bottom:8px;font-weight:700}
+
+/* Import mapping */
+.map-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.map-grid label{font-size:10px;color:var(--txt2);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
+.map-grid select{font-size:12px;padding:7px 26px 7px 8px}
+.import-stats{font-size:12px;color:var(--txt2);margin:10px 0;background:var(--card);padding:10px;border-radius:8px;border:1px solid var(--border);line-height:1.6}
+.import-stats strong{color:var(--green)}
+.import-stats .warn{color:var(--amber)}
+
+/* Leads modal */
+.search-row{margin-bottom:8px}
+.filter-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:10px}
+.filter-bar button{padding:6px 4px;font-size:11px;background:var(--card);border:1px solid var(--border);border-radius:7px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.filter-bar button.active{background:#fff;border-color:#fff;color:#000}
+.lead-list{display:flex;flex-direction:column;gap:3px;max-height:60vh;overflow-y:auto}
+.lead-item{padding:9px 10px;background:var(--card);border-left:3px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px}
+.lead-item:hover{background:#16162a}
+.lead-item.active{background:#1a1a30;border-left-color:var(--red)}
+.lead-item .r{font-family:var(--mono);font-size:10px;color:var(--red2);font-weight:700;min-width:34px}
+.lead-item .biz{flex:1;font-weight:700;color:#fff;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead-item .meta{font-size:10px;color:var(--txt2);display:flex;gap:5px;align-items:center;flex-shrink:0}
+.lead-item .att{background:var(--border2);padding:1px 5px;border-radius:8px;font-family:var(--mono);font-size:9px;color:var(--txt)}
+.lead-item .st-pill{font-size:9px;padding:1px 6px;border-radius:8px;background:var(--border);text-transform:uppercase;letter-spacing:.04em}
+.lead-item.s-Callback{border-left-color:var(--amber)}
+.lead-item.s-Callback .st-pill{background:rgba(255,171,0,.2);color:var(--amber)}
+.lead-item.s-AwaitingCallback{border-left:3px dashed var(--amber)}
+.lead-item.s-AwaitingCallback .st-pill{background:rgba(255,171,0,.12);color:var(--amber);border:1px dashed var(--amber)}
+.recent-chip{font-size:10px;color:var(--txt3);font-family:var(--mono);margin-left:6px;white-space:nowrap}
+.ctx-strip{font-size:11px;color:var(--txt2);margin:4px 0 8px;line-height:1.4;font-family:var(--mono)}
+.ctx-strip strong{color:var(--txt);font-weight:600}
+.notes-hist .entry{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);line-height:1.5}
+.notes-hist .entry:last-child{border-bottom:none;margin-bottom:0}
+.notes-hist .entry-head{margin-bottom:6px;font-size:11px;color:var(--txt3)}
+.notes-hist .note-bullet{position:relative;padding-left:14px;margin:3px 0;line-height:1.45}
+.notes-hist .note-bullet::before{content:'•';position:absolute;left:2px;top:0;color:var(--txt3);font-weight:700}
+.notes-hist .entry.manual{border-left:3px solid var(--blue);padding-left:8px;font-style:italic;background:rgba(64,156,255,.04)}
+.notes-hist .entry.manual .oc{color:var(--blue)}
+.manual-note-panel{margin-top:8px;padding:10px;border:1px dashed var(--blue);border-radius:8px;background:rgba(64,156,255,.03)}
+.lead-item.s-HotLead{border-left-color:#ff4081}
+.lead-item.s-HotLead .st-pill{background:rgba(255,64,129,.2);color:#ff4081}
+.lead-item.s-Quoted{border-left-color:var(--purple)}
+.lead-item.s-Quoted .st-pill{background:rgba(179,136,255,.2);color:var(--purple)}
+.lead-item.s-NotInterested{border-left-color:#444}
+.lead-item.s-NoAnswer{border-left-color:var(--txt3)}
+.lead-item.s-Emailed{border-left-color:var(--blue)}
+.lead-item.s-DONOTCALL{border-left-color:var(--danger);background:rgba(255,23,68,.05)!important}
+.lead-item.s-DONOTCALL .st-pill{background:rgba(255,23,68,.2);color:var(--danger)}
+
+/* Misc */
+table{width:100%;font-size:10px;border-collapse:collapse;margin:8px 0}
+th,td{padding:5px;border:1px solid var(--border);text-align:left;color:var(--txt2)}
+th{background:var(--card);font-weight:600}
+.tbl-wrap{max-width:100%;overflow-x:auto}
+.empty-card{text-align:center;padding:40px 20px;color:var(--txt3);font-size:13px}
+.badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;letter-spacing:.04em;vertical-align:middle;margin-left:4px}
+.badge.att{background:var(--border2);color:var(--txt);font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL (first use) -->
+<div class="modal" id="setup-modal" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <button class="x-btn" onclick="closeSetup()">✕</button>
+    <div class="logo" style="margin-bottom:10px"><span>ARESFIT · SANDDE</span></div>
+    <p class="sub" style="margin-bottom:14px">Your name and email — used for email signatures later. Sandde defaults pre-filled.</p>
+    <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Name</label>
+    <input type="text" id="setup-name" placeholder="Sandde" style="margin:4px 0 10px">
+    <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Email</label>
+    <input type="email" id="setup-email" placeholder="info@aresfit.co.uk" style="margin:4px 0 14px">
+    <button class="btn-red" style="width:100%;padding:12px" onclick="saveSetup()">Save</button>
+  </div>
+</div>
+
+<!-- UPLOAD SCREEN -->
+<div id="upload-screen" class="upload-screen" style="display:none">
+  <div class="upload-card">
+    <button class="x-btn" onclick="openSetup()">⚙</button>
+    <div class="logo" style="font-size:20px;margin-bottom:4px"><span>ARESFIT DIALER</span> <span style="font-size:11px;color:var(--txt3);font-weight:500">· sandde v1</span></div>
+    <p class="sub">22-column AresFit call sheet import. Notes pipe-joined, row numbers preserved.</p>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('csv-in').click()">
+      <div class="big">📂</div>
+      <div style="margin-top:8px;font-weight:800;font-size:16px">Drop your CSV</div>
+      <div class="sub" style="margin-top:3px">or tap to browse</div>
+    </div>
+    <input type="file" id="csv-in" accept=".csv" style="display:none" onchange="handleFile(event)">
+    <div id="resume-box" style="display:none;margin-top:12px">
+      <button class="btn-red" style="width:100%;padding:14px" onclick="loadSession()">↻ Resume previous session</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MAPPING MODAL -->
+<div class="modal" id="map-modal" style="display:none">
+  <div class="modal-box">
+    <div class="logo" style="margin-bottom:8px"><span>CONFIRM IMPORT</span></div>
+    <p class="sub" style="margin-bottom:10px">Auto-detected column mapping. Legacy columns (last 8) preserved round-trip.</p>
+    <button class="btn-red" style="width:100%;margin-bottom:12px;padding:13px" onclick="confirmImport()">Import leads →</button>
+    <div class="map-grid" id="map-grid"></div>
+    <div id="import-info"></div>
+    <h2 style="margin-top:12px">Preview (first 3 rows)</h2>
+    <div class="tbl-wrap"><table id="preview-tbl"></table></div>
+  </div>
+</div>
+
+<!-- LEADS MODAL -->
+<div class="modal" id="leads-modal" style="display:none">
+  <div class="modal-box">
+    <button class="x-btn" onclick="closeLeads()">✕</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="logo"><span>LEADS</span> <span style="font-size:11px;color:var(--txt3)" id="leads-count"></span></div>
+      <button class="btn-ghost btn-sm" onclick="openNewLead()" style="font-size:11px">+ New Lead</button>
+    </div>
+    <div class="search-row"><input type="text" id="lead-search" placeholder="🔍 Search R-number, business, DM, phone" oninput="onSearch()"></div>
+    <div class="filter-bar" id="filter-bar"></div>
+    <div class="lead-list" id="lead-list"></div>
+  </div>
+</div>
+
+<!-- NEW LEAD MODAL -->
+<div class="modal" id="new-lead-modal" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <button class="x-btn" onclick="closeNewLead()">✕</button>
+    <div class="logo" style="margin-bottom:8px"><span>+ NEW LEAD</span></div>
+    <p class="sub" style="margin-bottom:10px">Adds a new row to the session. Gets the next R-number, exports with the rest.</p>
+    <div class="c-row"><div class="c-lbl">Business name *</div><input type="text" id="nl-biz" placeholder="e.g. Arete Performance"></div>
+    <div class="c-row"><div class="c-lbl">Phone *</div><input type="text" id="nl-phone" placeholder="01234 567890"></div>
+    <div class="c-row"><div class="c-lbl">Decision Maker (optional)</div><input type="text" id="nl-dm"></div>
+    <div class="c-row"><div class="c-lbl">Email (optional)</div><input type="email" id="nl-email"></div>
+    <div class="c-row"><div class="c-lbl">Source row (optional — reference a parent row e.g. 161)</div><input type="text" id="nl-src" placeholder="R-number of referrer"></div>
+    <div style="display:flex;gap:6px;margin-top:12px">
+      <button class="btn-ghost" style="flex:1;padding:11px" onclick="closeNewLead()">Cancel</button>
+      <button class="btn-red" style="flex:1;padding:11px" onclick="saveNewLead()">Add lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal" id="settings-modal" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <button class="x-btn" onclick="closeSettings()">✕</button>
+    <div class="logo" style="margin-bottom:10px"><span>SETTINGS</span></div>
+    <h2>Appearance</h2>
+    <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="toggleTheme()" id="theme-toggle-btn">🌙 Switch to light mode</button>
+    <h2>Sender</h2>
+    <p style="font-size:12px;margin-bottom:8px;color:var(--txt2)"><strong style="color:var(--txt)" id="st-name"></strong><br><span id="st-email"></span></p>
+    <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="openSetup()">Edit sender</button>
+    <h2>Data</h2>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="document.getElementById('csv-in').click()">📂 Upload new CSV (keeps session)</button>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportCSV()">📥 Export CSV (22 cols)</button>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="manualBackup()">💾 Manual backup</button>
+    <button class="btn-red" style="width:100%;margin-bottom:14px;padding:11px" onclick="closeSettings();showHandover()">📝 Generate session handover</button>
+    <h2>Email subjects</h2>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="closeSettings();openSubjectEditor()">✉ Edit subject rotation pool</button>
+    <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="closeSettings();openTemplatesEditor()">📝 Edit signature + email templates</button>
+    <h2>CircleLoop setup</h2>
+    <p class="sub" style="font-size:11px;margin-bottom:6px">One-time: import these contacts into CircleLoop so business names auto-show on every dial. Re-export only when you add new leads.</p>
+    <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="openClExportModal()">📇 Export contacts for CircleLoop</button>
+    <h2>CircleLoop scheme (iOS)</h2>
+    <p class="sub" style="font-size:11px;margin-bottom:6px">Test which scheme auto-populates the keypad.</p>
+    <select id="cl-scheme-sel" onchange="saveClScheme(this.value)" style="margin-bottom:14px"></select>
+    <h2>Danger</h2>
+    <button style="width:100%;background:#1a0f0f;color:var(--red2);border:1px solid var(--red);padding:10px;border-radius:8px;font-size:12px" onclick="clearSession()">🗑 Clear all session data</button>
+    <p class="sub" style="text-align:center;font-size:10px;margin-top:14px;color:var(--txt3)">AresFit Dialer Sandde · v1 (P0)</p>
+  </div>
+</div>
+
+<!-- CIRCLELOOP EXPORT WIZARD -->
+<div class="modal" id="cl-export-modal" style="display:none">
+  <div class="modal-box">
+    <button class="x-btn" onclick="closeClExportModal()">✕</button>
+    <div class="logo" style="margin-bottom:8px"><span>📇 EXPORT FOR CIRCLELOOP</span></div>
+    <p class="sub" style="margin-bottom:12px">Optional: drop your existing CircleLoop contacts export to skip duplicates. The file will be parsed in your browser — nothing is uploaded anywhere.</p>
+    <p style="font-size:11px;color:var(--txt2);margin-bottom:6px"><strong>How to get the file:</strong> CircleLoop desktop → Admin Settings → Global Settings → Export contacts.</p>
+    <input type="file" id="cl-export-file-input" accept=".csv" onchange="onClExportFile(event)" style="margin-bottom:8px;width:100%">
+    <div id="cl-export-status" style="font-size:11px;color:var(--txt2);margin-bottom:14px;padding:8px;border-radius:6px;background:var(--card);border:1px solid var(--border)">No file dropped — will export all contacts.</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn-ghost" style="flex:1;padding:11px" onclick="closeClExportModal()">Cancel</button>
+      <button class="btn-red" style="flex:2;padding:11px" onclick="doClExport()">Export</button>
+    </div>
+  </div>
+</div>
+
+<!-- HANDOVER MODAL -->
+<div class="modal" id="handover-modal" style="display:none">
+  <div class="modal-box">
+    <button class="x-btn" onclick="closeHandover()">✕</button>
+    <div class="logo" style="margin-bottom:8px"><span>SESSION HANDOVER</span></div>
+    <p class="sub" style="margin-bottom:10px">Markdown summary of today. Paste into a fresh Claude chat to continue tomorrow.</p>
+    <div class="handover-box" id="handover-body"></div>
+    <div style="display:flex;gap:6px"><button class="btn-red" style="flex:1;padding:11px" onclick="copyHandover()">📋 Copy to clipboard</button><button class="btn-ghost" style="flex:1;padding:11px" onclick="downloadHandover()">⬇ Download .md</button></div>
+  </div>
+</div>
+
+<!-- EMAIL COMPOSER MODAL (Ship 1) -->
+<div class="modal" id="composer-modal" style="display:none">
+  <div class="modal-box" style="max-width:640px">
+    <button class="x-btn" onclick="closeComposer()">✕</button>
+    <div class="logo" style="margin-bottom:6px"><span>COMPOSE EMAIL</span></div>
+    <p class="sub" style="margin-bottom:6px" id="c-recipient">—</p>
+    <div id="c-recipient-picker" style="display:none;margin-bottom:10px"></div>
+    <div class="composer-grid">
+      <div>
+        <div class="c-lbl">Call reality</div>
+        <select id="c-reality" onchange="refreshComposer()"></select>
+      </div>
+      <div>
+        <div class="c-lbl">Scheduled send</div>
+        <select id="c-schedule" onchange="refreshComposer()"></select>
+      </div>
+    </div>
+    <div class="c-row">
+      <div class="c-lbl">Staff name (fills {STAFF_NAME}, default "reception")</div>
+      <input type="text" id="c-staff" placeholder="reception" oninput="refreshComposer()">
+    </div>
+    <div class="c-row" id="c-pitch-wrap" style="display:none">
+      <label class="c-chk"><input type="checkbox" id="c-pitch" onchange="refreshComposer()"> Pitch specific brands (DM confirmed equipment on this row)</label>
+    </div>
+    <div class="c-row">
+      <div class="c-lbl"><span>Subject</span><button class="btn-sm btn-ghost" style="font-size:10px;padding:3px 8px" onclick="suggestSubject();renderComposerWarnings()">↻ suggest from pool</button></div>
+      <input type="text" id="c-subject" placeholder="subject line" oninput="renderComposerWarnings()">
+    </div>
+    <div class="c-row">
+      <div class="c-lbl">Body (edit before launch)</div>
+      <textarea id="c-body" oninput="renderComposerWarnings()"></textarea>
+    </div>
+    <div id="c-warnings"></div>
+    <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn-ghost" style="flex:1;padding:11px;min-width:90px" onclick="closeComposer()">Cancel</button>
+      <button class="btn-ghost" style="flex:1;padding:11px;min-width:110px" onclick="launchBlankFromComposer()" title="Open Gmail blank — Claude drafts from scratch">📝 Blank Gmail</button>
+      <button class="btn-red" style="flex:2;padding:11px;min-width:160px" onclick="launchFromComposer()">📧 Launch Gmail →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNATURE + TEMPLATES MODAL -->
+<div class="modal" id="templates-modal" style="display:none">
+  <div class="modal-box" style="max-width:560px">
+    <button class="x-btn" onclick="closeTemplates()">✕</button>
+    <div class="logo" style="margin-bottom:8px"><span>SIGNATURE + TEMPLATES</span></div>
+    <h2>Signature</h2>
+    <div class="tmpl-edit"><textarea id="tmpl-sig" placeholder="Signature block"></textarea></div>
+    <h2>Templates (placeholders: {BUSINESS} {DM} {BRANDS} {SWAP} {ATTEMPTS} {STAFF_NAME} {SCHED_PAST} {SCHED_FOLLOWUP_PERIOD} {SIGNATURE})</h2>
+    <div class="c-lbl" style="margin-top:8px">Cold / VM</div><div class="tmpl-edit"><textarea id="tmpl-cold"></textarea></div>
+    <div class="c-lbl" style="margin-top:8px">Reception transferred</div><div class="tmpl-edit"><textarea id="tmpl-receptionTransferred"></textarea></div>
+    <div class="c-lbl" style="margin-top:8px">Manager busy</div><div class="tmpl-edit"><textarea id="tmpl-managerBusy"></textarea></div>
+    <div class="c-lbl" style="margin-top:8px">Not interested (polite)</div><div class="tmpl-edit"><textarea id="tmpl-notIntPolite"></textarea></div>
+    <div class="c-lbl" style="margin-top:8px">Follow-up</div><div class="tmpl-edit"><textarea id="tmpl-followUp"></textarea></div>
+    <div style="display:flex;gap:6px;margin-top:10px"><button class="btn-red" style="flex:1;padding:11px" onclick="saveTemplates()">Save</button><button class="btn-ghost" style="padding:11px" onclick="resetTemplates()">Reset to defaults</button></div>
+  </div>
+</div>
+
+<!-- SUBJECTS MODAL -->
+<div class="modal" id="subjects-modal" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <button class="x-btn" onclick="closeSubjects()">✕</button>
+    <div class="logo" style="margin-bottom:8px"><span>EMAIL SUBJECT POOL</span></div>
+    <p class="sub" style="margin-bottom:10px">One subject per line. Rotation picks unused-today first.</p>
+    <div class="subj-pool"><textarea id="subjects-ta" placeholder="one subject per line"></textarea></div>
+    <div style="display:flex;gap:6px;margin-top:10px"><button class="btn-red" style="flex:1;padding:10px" onclick="saveSubjects()">Save pool</button><button class="btn-ghost" style="padding:10px" onclick="resetSubjectsToday()">Reset today</button></div>
+  </div>
+</div>
+
+<!-- CALLBACK EDIT MODAL -->
+<div class="modal" id="cb-edit-modal" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <button class="x-btn" onclick="closeCbEdit()">✕</button>
+    <div class="logo" style="margin-bottom:8px"><span>EDIT CALLBACK</span></div>
+    <p class="sub" style="margin-bottom:10px" id="cbe-header">—</p>
+    <div class="c-row">
+      <div class="c-lbl">Date & time</div>
+      <input type="datetime-local" id="cbe-date">
+    </div>
+    <div class="c-row">
+      <div class="c-lbl">End time (optional)</div>
+      <input type="time" id="cbe-end">
+    </div>
+    <div style="display:flex;gap:6px;margin-top:12px;align-items:center">
+      <button style="background:#1a0a0a;color:var(--red2);border:1px solid var(--red);padding:10px 14px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer" onclick="clearCbEdit()">🗑 Clear callback</button>
+      <div style="flex:1"></div>
+      <button class="btn-ghost" style="padding:10px 14px" onclick="closeCbEdit()">Cancel</button>
+      <button class="btn-red" style="padding:10px 18px" onclick="saveCbEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTE EDIT MODAL -->
+<div class="modal" id="note-edit-modal" style="display:none">
+  <div class="modal-box" style="max-width:500px">
+    <button class="x-btn" onclick="closeNoteEdit()">✕</button>
+    <div class="logo" style="margin-bottom:6px"><span>EDIT NOTE</span></div>
+    <p class="sub" id="ne-header" style="margin-bottom:10px">—</p>
+    <div class="c-row">
+      <div class="c-lbl">Outcome</div>
+      <select id="ne-outcome"></select>
+    </div>
+    <div class="composer-grid">
+      <div>
+        <div class="c-lbl">Date (DD/MM)</div>
+        <input type="text" id="ne-date" placeholder="DD/MM">
+      </div>
+      <div>
+        <div class="c-lbl">Time (HH:MM)</div>
+        <input type="text" id="ne-time" placeholder="HH:MM">
+      </div>
+    </div>
+    <div class="c-row">
+      <div class="c-lbl">Note text</div>
+      <textarea id="ne-text" style="min-height:110px"></textarea>
+    </div>
+    <div id="ne-cb-fields" style="display:none">
+      <div class="c-row">
+        <div class="c-lbl">Direction</div>
+        <div style="display:flex;gap:4px">
+          <button type="button" id="ne-dir-out" onclick="setNeDirection('out')" style="flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:600">📤 I call them</button>
+          <button type="button" id="ne-dir-in" onclick="setNeDirection('in')" style="flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:600">📥 They call me</button>
+        </div>
+      </div>
+      <div class="c-row">
+        <div class="c-lbl">End time (optional, defines a window)</div>
+        <input type="time" id="ne-end">
+      </div>
+      <div class="c-row">
+        <label class="c-chk"><input type="checkbox" id="ne-queue" checked> Also set this as the row's scheduled callback (adds to due queue)</label>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:12px;align-items:center">
+      <button style="background:#1a0a0a;color:var(--red2);border:1px solid var(--red);padding:10px 14px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer" onclick="deleteNoteEdit()">🗑 Delete</button>
+      <div style="flex:1"></div>
+      <button class="btn-ghost" style="padding:10px 14px" onclick="closeNoteEdit()">Cancel</button>
+      <button class="btn-red" style="padding:10px 18px" onclick="saveNoteEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIME EDIT MODAL -->
+<div class="modal" id="time-modal" style="display:none">
+  <div class="modal-box" style="max-width:340px">
+    <button class="x-btn" onclick="closeTime()">✕</button>
+    <div class="logo" style="margin-bottom:10px"><span>EDIT CALL TIME</span></div>
+    <p class="sub" style="margin-bottom:10px">HH:MM (24h). Also accepts 1432 / 14:32 / half 2.</p>
+    <input type="text" id="time-in" placeholder="14:32" style="margin-bottom:12px">
+    <div style="display:flex;gap:6px"><button class="btn-ghost" style="flex:1" onclick="closeTime()">Cancel</button><button class="btn-red" style="flex:1" onclick="saveTime()">Save</button></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="app" style="display:none">
+
+  <div class="sticky-top">
+    <div class="head-row">
+      <div class="logo"><span>ARESFIT</span><span class="save-dot" id="save-dot"></span></div>
+      <button class="btn-ghost btn-sm" onclick="openLeads()">📋 Leads</button>
+      <button class="btn-ghost btn-sm" onclick="openSettings()">⚙</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="s-calls">0</div><div class="stat-lbl">Dialled</div></div>
+      <div class="stat"><div class="stat-val" id="s-rate">0%</div><div class="stat-lbl">Contact%</div></div>
+      <div class="stat"><div class="stat-val" id="s-cb">0</div><div class="stat-lbl">Callbacks</div></div>
+      <div class="stat"><div class="stat-val" id="s-hot">0</div><div class="stat-lbl">Hot</div></div>
+    </div>
+    <div id="block-banner-slot"></div>
+    <div id="due-queue-slot"></div>
+  </div>
+
+  <div id="card-slot"></div>
+
+  <div class="toolbar">
+    <button onclick="openLeads()">📋 Leads</button>
+    <button onclick="showHandover()">📝 Handover</button>
+    <button onclick="exportCSV()">📥 Export</button>
+    <button onclick="openSettings()">⚙ Settings</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   AresFit Dialer Sandde v1 — P0
+   Mobile-first single-column. 22-col sheet. Pipe-append notes.
+   ============================================================ */
+
+// ===== Config / constants =====
+const FIELDS = ['priority','business','phone','website','status','stage','notes','followUp','equipBrands','aresBrands','dm','email','callAngle','research'];
+const LABELS = {
+  priority:'FINAL PRIORITY', business:'Business Name', phone:'Phone', website:'Website',
+  status:'Status', stage:'Stage', notes:'Notes', followUp:'Follow-up Date',
+  equipBrands:'Equipment Brands', aresBrands:'AresFit Brands', dm:'PSC / Decision Maker',
+  email:'Email', callAngle:'Call Angle', research:'Research Notes'
+};
+// Exact 14 → 22 column order for export round-trip
+const SHEET_COLS = ['FINAL PRIORITY','Business Name','Phone','Website','Status','Stage','Notes','Follow-up Date','Equipment Brands','AresFit Brands','PSC / Decision Maker','Email','Call Angle','Research Notes','Lead Priority','Segment','Lead_ID','Research Status','Verified','Viability Score','Verification Notes','Sort'];
+// Header → FIELDS key
+const HEADER_MAP = {'FINAL PRIORITY':'priority','Business Name':'business','Phone':'phone','Website':'website','Status':'status','Stage':'stage','Notes':'notes','Follow-up Date':'followUp','Equipment Brands':'equipBrands','AresFit Brands':'aresBrands','PSC / Decision Maker':'dm','Email':'email','Call Angle':'callAngle','Research Notes':'research'};
+
+const STATUS_OPTS = ['','Callback','Quoted','No Answer','Awaiting Callback','Not Interested','Hot Lead','DO NOT CALL','Emailed','Awaiting Pass-Through'];
+const STAGE_OPTS  = ['','Intro','Contacted','Quoted','Lost','Closed'];
+const OUTCOMES = ['Contacted','VM','NA','Emailed','Awaiting Callback','Dead Air','Provider Reject','Not Int.','Callback','HOT'];
+const ATTEMPT_OUTCOMES = new Set(['VM','NA','Dead Air']); // increment attempts on these
+// Outcomes that auto-fill a default note if user leaves the note blank — removes friction on the low-info outcomes
+const AUTOFILL_OUTCOMES = {
+  'VM':'VM - no message left',
+  'NA':'NA - no answer',
+  'Emailed':'Gatekeeper said to email - DM not available',
+  'Awaiting Callback':'Reception/staff took details, expecting callback (no time given)',
+  'Dead Air':'Dead air - picked up silent or dropped',
+  'Provider Reject':'Provider reject - dead number',
+  'Not Int.':'Not interested - declined'
+};
+const FILTERS = ['All','Recent','Uncalled','Callback','Awaiting CB','Quoted','Hot','VM','Contacted','Reached','DNC'];
+
+// Save keys
+const SAVE_KEY    = 'aresfit_sandde_state';
+const SETUP_KEY   = 'aresfit_sandde_user';
+const PREFS_KEY   = 'aresfit_sandde_prefs';
+const IDB_NAME    = 'aresfit_sandde_dialer';
+
+// CircleLoop scheme - two modes, user-selectable in settings
+const CL_SCHEME_OPTIONS = [
+  {label:'Instant call (auto-dials)', value:'circleloop://'},
+  {label:'Copy & open keypad (manual paste)', value:'circleloop://keypad/'}
+];
+const CL_SCHEME_DEFAULT = 'circleloop://';
+
+const BACKUP_INTERVAL = 25;
+const DUE_WINDOW_MS = 5 * 60 * 1000; // ±5 min callback window
+
+// Brand swap map — typing these in notes surfaces the swap angle as a chip (P2)
+const BRAND_MAP = {
+  'life fitness':'Star Trac cardio, Nautilus resistance',
+  'hammer strength':'Nautilus plate-loaded',
+  'precor':'Star Trac cardio, Nautilus resistance',
+  'cybex':'Nautilus resistance',
+  'matrix':'Star Trac cardio, Nautilus resistance',
+  'technogym':'Star Trac cardio, Nautilus resistance',
+  'pulse fitness':'Nautilus, Star Trac',
+  'panatta':'Nautilus',
+  'watson':'Jordan Fitness',
+  'arsenal strength':'Nautilus (closest equivalent)',
+  'gym80':'Nautilus',
+  'gym 80':'Nautilus'
+};
+
+// Default email subject rotation pool (editable in settings)
+const DEFAULT_SUBJECTS = [
+  'Introducing AresFit',
+  'AresFit - commercial equipment supplier',
+  'Following up on our call earlier',
+  'StairMaster options for low-ceiling space',
+  'Treadmill pricing - Star Trac range',
+  'Nautilus resistance options',
+  'Jordan functional kit',
+  'Schwinn cycle options',
+  'Commercial gym equipment - quick intro',
+  'AresFit equipment options'
+];
+
+// ===== Email composer (Ship 1) =====
+const DEFAULT_SIGNATURE = `Best regards,
+Sandde
+Director - AresFit
+0333 880 6486
+aresfit.co.uk`;
+
+const DEFAULT_TEMPLATES = {
+  cold:`Hi,
+
+I tried calling {SCHED_PAST} but couldn't get through. I'm Sandde, Director at AresFit. We supply commercial gym equipment from Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness.
+
+If you've got anything coming up equipment-wise, whether it's replacements, additions or a refurb, I'd be happy to put some options together with pricing.
+
+{SIGNATURE}`,
+  receptionTransferred:`Hi,
+
+I called {SCHED_PAST} and was told to get in contact with you. I'm Sandde, Director at AresFit. We supply commercial gym equipment from Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness.
+
+If you've got anything coming up equipment-wise, happy to put some options together.
+
+{SIGNATURE}`,
+  managerBusy:`Hi,
+
+I've tried giving you a call a couple of times over the last day or two - {STAFF_NAME} mentioned you've been tied up in meetings, which is completely understandable.
+
+I'm Sandde, Director at AresFit. We supply commercial gym equipment from Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness. If you've got anything coming up equipment-wise, happy to put some options together for whenever works for you.
+
+{SIGNATURE}`,
+  notIntPolite:`Hi,
+
+Thanks for taking the time {SCHED_PAST} and for being upfront about where you're at with your current setup. Completely understood.
+
+If the situation ever changes down the line - whether it's a refurb window, a supplier issue, or just wanting a second quote - feel free to give me a shout.
+
+{SIGNATURE}`,
+  followUp:`Hi,
+
+Just following up on my email {SCHED_FOLLOWUP_PERIOD} - wanted to check if you'd had a chance to take a look. Happy to send over some options or pricing if you're considering any new kit, even if it's just for future reference.
+
+{SIGNATURE}`
+};
+
+const PITCH_ADDENDUM = `I know you've got {BRANDS} on the floor - for equivalent or upgraded options we'd typically pitch {SWAP}. Happy to send specific pricing if useful.`;
+
+const CALL_REALITY_OPTS = [
+  {value:'cold', label:'Cold / VM / no answer'},
+  {value:'receptionTransferred', label:'Reception transferred to me'},
+  {value:'managerBusy', label:'DM repeatedly busy / in meetings'},
+  {value:'notIntPolite', label:'Not interested but polite'},
+  {value:'followUp', label:'Standard follow-up (48h+)'}
+];
+
+const SCHEDULE_OPTS = [
+  {value:'now', label:'Sending now', past:'earlier', period:'last week', warn:null},
+  {value:'later-today', label:'Sending later today', past:'earlier today', period:'last week', warn:null},
+  {value:'tomorrow', label:'Sending tomorrow', past:'yesterday', period:'a few days ago', warn:'Next-day follow-up on cold — skill says don\'t. Continue?'},
+  {value:'monday', label:'Sending Monday morning', past:'last week', period:'last week', warn:null}
+];
+
+const SUBJECT_SUGGESTIONS = {
+  cold:'Introducing AresFit',
+  receptionTransferred:'AresFit - commercial equipment supplier',
+  managerBusy:'AresFit - equipment options',
+  notIntPolite:'Thanks for the chat',
+  followUp:'Following up on my email'
+};
+
+// Skill v10 rejected phrases — warning strip, non-blocking. Em-dash literal checked separately.
+const REJECTED_PHRASES = ['the lot','lads','steer','synergies','touch base','circle back','moving forward'];
+
+// Status values safe to auto-overwrite with "Emailed"
+const STATUS_SAFE_OVERWRITE = ['','Uncalled','No Answer','Voicemail'];
+
+// Outcome → auto-set rules. Array per outcome so each outcome can upgrade multiple fields with its own safe-overwrite list.
+const OUTCOME_AUTO_SET = {
+  'HOT':[
+    {field:'status',value:'Hot Lead',safe:['','Uncalled','No Answer','Voicemail','Emailed','Awaiting Pass-Through']},
+    {field:'stage',value:'Contacted',safe:['','Intro']}
+  ],
+  'Callback':[
+    {field:'status',value:'Callback',safe:['','Uncalled','No Answer','Voicemail','Emailed','Hot Lead','Awaiting Pass-Through','Awaiting Callback']},
+    {field:'stage',value:'Contacted',safe:['','Intro']}
+  ],
+  'Awaiting Callback':[
+    {field:'status',value:'Awaiting Callback',safe:['','Uncalled','No Answer','Voicemail']},
+    {field:'stage',value:'Contacted',safe:['','Intro']}
+  ],
+  'Emailed':[
+    // Sets Status=Emailed but deliberately does NOT touch Stage — DM hasn't responded yet, so Funnel Stage stays at Intro
+    {field:'status',value:'Emailed',safe:['','Uncalled','No Answer','Voicemail','Awaiting Callback']}
+  ],
+  'Not Int.':[
+    {field:'status',value:'Not Interested',safe:['','Uncalled','No Answer','Voicemail','Emailed','Callback','Hot Lead','Awaiting Pass-Through']},
+    {field:'stage',value:'Lost',safe:['','Intro','Contacted']}
+  ],
+  'Contacted':[
+    {field:'stage',value:'Contacted',safe:['','Intro']}
+  ]
+};
+
+// ===== State =====
+let raw=[], headers=[], mapping={}, leads=[], idx=0, filter='All', filtered=[], searchTerm='';
+let activeFilters=['All']; // multi-filter: tap to toggle, intersection logic. 'All' = no constraints.
+let justLoggedId=null; // tracks lead.id that just had an outcome logged — flips Log/Next button to Next on second tap
+let manualNoteOpen=false; // toggles inline manual-note editor on the call card
+let manualNoteText='';    // draft text for the manual-note editor
+let dueQueueIdx=0;        // index for cycling through overdue/due banner
+let user={name:'Sandde', email:'info@aresfit.co.uk'};
+let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null};
+let idb=null;
+let outcomesSinceBackup=0;
+let timeEditContext=null; // {leadId, noteId} for time-modal
+let lastToastTs=0;
+
+// ===== Utils =====
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function pad2(n){return String(n).padStart(2,'0')}
+function format443(s){const d=(s||'').replace(/\D/g,'');if(d.length<4)return d;if(d.length<8)return d.slice(0,4)+' '+d.slice(4);return d.slice(0,4)+' '+d.slice(4,8)+' '+d.slice(8)}
+function ddmm(ts){const d=new Date(ts);return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)}
+function hhmm(ts){const d=new Date(ts);return pad2(d.getHours())+':'+pad2(d.getMinutes())}
+function todayKey(){const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())}
+// Relative time string for Recent filter chips ("2h ago", "yesterday", "5d ago")
+function relTime(ts){
+  if(!ts)return '';
+  const diff=Date.now()-ts;
+  if(diff<0)return 'soon';
+  const m=Math.floor(diff/60000);
+  if(m<1)return 'just now';
+  if(m<60)return m+'m ago';
+  const h=Math.floor(m/60);
+  if(h<24)return h+'h ago';
+  const d=Math.floor(h/24);
+  if(d===1)return 'yesterday';
+  if(d<7)return d+'d ago';
+  if(d<30)return Math.floor(d/7)+'w ago';
+  return Math.floor(d/30)+'mo ago';
+}
+// Latest note timestamp helper — used for Recent sort
+function latestNoteTs(l){
+  if(!l||!l.notes||!l.notes.length)return 0;
+  let max=0;
+  for(const n of l.notes){
+    if(n.legacy)continue;
+    const t=n.ts||0;
+    if(t>max)max=t;
+  }
+  return max;
+}
+// Latest VM entry for a lead — only returns when the lead's MOST RECENT non-legacy note is VM.
+// (i.e. they're still awaiting your return call. If you Contacted them after the VM, this returns null.)
+function latestVmEntry(l){
+  if(!l||!l.notes||!l.notes.length)return null;
+  let latest=null;
+  for(const n of l.notes){
+    if(n.legacy)continue;
+    if(!latest||(n.ts||0)>(latest.ts||0))latest=n;
+  }
+  return (latest&&(latest.outcome||'').toUpperCase()==='VM')?latest:null;
+}
+// Parse Follow-up Date column — handles ISO date, ISO datetime, UK date, UK date+time range, datetime-local
+function parseFollowUp(s){
+  if(!s)return null;
+  const clean=String(s).trim();if(!clean)return null;
+  let m;
+  // ISO datetime: 2026-04-23T14:30 or 2026-04-23 14:30:00
+  m=clean.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if(m){const h=+m[4],mi=+m[5];const hasTime=!(h===0&&mi===0);return{ts:new Date(+m[1],+m[2]-1,+m[3],h,mi).getTime(),hasTime}}
+  // ISO date-only: 2026-04-23
+  m=clean.match(/^(\d{4})-(\d{2})-(\d{2})(?!\d)/);
+  if(m)return{ts:new Date(+m[1],+m[2]-1,+m[3]).getTime(),hasTime:false};
+  // UK date + time range: 23/04/2026 10:00-11:00
+  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+  if(m)return{ts:new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5]).getTime(),hasTime:true,rangeEnd:pad2(+m[6])+':'+m[7]};
+  // UK date + single time: 23/04/2026 14:30
+  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
+  if(m)return{ts:new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5]).getTime(),hasTime:true};
+  // UK date-only: 23/04/2026
+  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m)return{ts:new Date(+m[3],+m[2]-1,+m[1]).getTime(),hasTime:false};
+  return null;
+}
+// Normalise Status values on import — case/spacing variants → canonical dropdown values
+function normStatus(s){
+  if(!s)return '';
+  const clean=String(s).trim();if(!clean)return '';
+  const map={'hot lead':'Hot Lead','callback':'Callback','no answer':'No Answer','not interested':'Not Interested','quoted':'Quoted','do not call':'DO NOT CALL','emailed':'Emailed','uncalled':'Uncalled','voicemail':'Voicemail','contacted':'Contacted','hot':'Hot Lead','dnc':'DO NOT CALL','awaiting pass-through':'Awaiting Pass-Through','awaiting pass through':'Awaiting Pass-Through','pass-through':'Awaiting Pass-Through','awaiting callback':'Awaiting Callback','awaiting cb':'Awaiting Callback'};
+  return map[clean.toLowerCase()]||clean;
+}
+// Start-of-today and end-of-today timestamps
+function startOfToday(){const d=new Date();d.setHours(0,0,0,0);return d.getTime()}
+function endOfToday(){const d=new Date();d.setHours(23,59,59,999);return d.getTime()}
+// Overdue check — based on either cbDate (precise) or followUp (date-only or date+time)
+function isOverdueRow(l){
+  if(!l)return false;
+  if((l.status||'').trim()==='DO NOT CALL')return false;
+  if(l.cbDate){const d=new Date(l.cbDate).getTime();if(!isNaN(d)&&d<Date.now()-DUE_WINDOW_MS)return true}
+  const fu=parseFollowUp(l.followUp);
+  if(fu&&fu.ts<startOfToday())return true;
+  return false;
+}
+function isDueTodayRow(l){
+  if(!l)return false;
+  if((l.status||'').trim()==='DO NOT CALL')return false;
+  const fu=parseFollowUp(l.followUp);
+  if(fu){const s=startOfToday(),e=endOfToday();if(fu.ts>=s&&fu.ts<=e)return true}
+  return false;
+}
+// Dismiss-for-today helpers (resets naturally at midnight)
+function isDismissedToday(id){
+  const k=todayKey();
+  if(!prefs.dismissedToday||prefs.dismissedToday.date!==k)return false;
+  return (prefs.dismissedToday.ids||[]).includes(id);
+}
+function dismissForToday(id){
+  const k=todayKey();
+  if(!prefs.dismissedToday||prefs.dismissedToday.date!==k)prefs.dismissedToday={date:k,ids:[]};
+  if(!prefs.dismissedToday.ids.includes(id))prefs.dismissedToday.ids.push(id);
+  savePrefs();renderDueQueueBanner();renderCard();renderLeadList();
+}
+// Parse flexible user time input → "HH:MM" or null
+function parseTime(s){
+  s=String(s||'').trim().toLowerCase();
+  if(!s)return null;
+  // half-past style
+  let m=s.match(/^half(?:\s*past)?\s*(\d{1,2})/);
+  if(m)return pad2(+m[1])+':30';
+  // 4-digit like 1432
+  m=s.match(/^(\d{2})(\d{2})$/);
+  if(m&&+m[1]<24&&+m[2]<60)return m[1]+':'+m[2];
+  // h:mm or hh:mm
+  m=s.match(/^(\d{1,2})[:\.](\d{2})$/);
+  if(m&&+m[1]<24&&+m[2]<60)return pad2(+m[1])+':'+m[2];
+  // 3-digit like 932 -> 09:32
+  m=s.match(/^(\d{1})(\d{2})$/);
+  if(m&&+m[2]<60)return '0'+m[1]+':'+m[2];
+  return null;
+}
+
+// ===== CSV parser — handles quoted fields, embedded newlines =====
+function parseCSV(text){
+  text=text.replace(/^\ufeff/,'');
+  const rows=[];let row=[],field='',q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],nx=text[i+1];
+    if(ch==='"'){
+      if(q&&nx==='"'){field+='"';i++} else q=!q;
+    }else if(ch===','&&!q){
+      row.push(field);field='';
+    }else if((ch==='\n'||ch==='\r')&&!q){
+      if(ch==='\r'&&nx==='\n')i++;
+      row.push(field);field='';
+      if(row.some(v=>v!==''))rows.push(row);
+      row=[];
+    }else{field+=ch}
+  }
+  if(field.length||row.length){row.push(field);if(row.some(v=>v!==''))rows.push(row)}
+  return rows;
+}
+function csvEscape(v){v=String(v==null?'':v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+
+// ===== IndexedDB =====
+function openIDB(){return new Promise((res,rej)=>{try{const r=indexedDB.open(IDB_NAME,1);r.onerror=()=>rej(r.error);r.onsuccess=()=>res(r.result);r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('state'))db.createObjectStore('state')}}catch(e){rej(e)}})}
+async function idbSave(data){try{if(!idb)idb=await openIDB();return new Promise((res,rej)=>{const tx=idb.transaction('state','readwrite');tx.objectStore('state').put(data,'main');tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error)})}catch(e){return false}}
+async function idbLoad(){try{if(!idb)idb=await openIDB();return new Promise((res,rej)=>{const tx=idb.transaction('state','readonly');const req=tx.objectStore('state').get('main');req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error)})}catch(e){return null}}
+
+// ===== Save / load =====
+function flashDot(ok){const d=document.getElementById('save-dot');if(!d)return;d.classList.remove('ok','fail','pulse');void d.offsetWidth;d.classList.add(ok?'ok':'fail','pulse')}
+function save(){
+  const data={raw,headers,mapping,leads,idx,filter,ts:Date.now()};
+  let ok=false;
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(data));ok=true}catch(e){console.warn('LS save failed',e)}
+  idbSave(data).catch(()=>{});
+  flashDot(ok);
+  return ok;
+}
+function hasSession(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));return d&&d.leads&&d.leads.length>0}catch(e){return false}}
+async function loadSession(){
+  let data=null;
+  try{const ls=JSON.parse(localStorage.getItem(SAVE_KEY));if(ls)data=ls}catch(e){}
+  try{const id=await idbLoad();if(id&&(!data||(id.ts||0)>(data.ts||0)))data=id}catch(e){}
+  if(!data||!data.leads)return;
+  raw=data.raw||[];headers=data.headers||[];mapping=data.mapping||{};leads=data.leads;idx=data.idx||0;filter=data.filter||'All';
+  activeFilters=Array.isArray(data.activeFilters)&&data.activeFilters.length?data.activeFilters:[filter||'All'];
+  // Back-compat: ensure per-lead fields exist
+  leads.forEach(l=>{
+    if(!Array.isArray(l.notes))l.notes=[];
+    if(typeof l.attempts!=='number')l.attempts=0;
+    if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+    if(!('preflightPassed' in l))l.preflightPassed=false;
+    if(!('mobileVerified' in l))l.mobileVerified=false;
+    if(!('michaelAlsoCalled' in l))l.michaelAlsoCalled=false;
+    if(!('providerReject' in l))l.providerReject=false;
+    if(!('phone2' in l))l.phone2='';
+    if(!('email2' in l))l.email2='';
+    // Back-compat: split pipe/comma/semicolon in email cell from older sessions
+    if(l.email&&!l.email2&&/[|,;]/.test(l.email)){
+      const parts=String(l.email).split(/[|,;]+/).map(s=>s.trim()).filter(s=>s.includes('@'));
+      l.email=parts[0]||'';l.email2=parts[1]||'';
+    }
+    if(l.status)l.status=normStatus(l.status);
+    // Back-compat: detect multi-number phone cells in existing sessions (covers any separator
+    // and the no-separator concatenation case). Mirrors confirmImport logic.
+    if(l.phone&&!l.phone2){
+      let parts=String(l.phone)
+        .split(/[|,;/\n\r]|\s+(?:and|or|alt|mobile|landline)\s+/i)
+        .map(s=>s.trim())
+        .filter(s=>s.replace(/\D/g,'').length>=10);
+      if(parts.length>=2){
+        l.phone=parts[0];l.phone2=parts[1];
+      } else {
+        const digits=String(l.phone).replace(/\D/g,'');
+        if(digits.length===22){l.phone=digits.slice(0,11);l.phone2=digits.slice(11)}
+        else if(digits.length===21){const at=digits.indexOf('07',10);if(at>0){l.phone=digits.slice(0,at);l.phone2=digits.slice(at)}}
+        else if(digits.length>=20){const a=digits.slice(0,11),b=digits.slice(11);if(/^0\d/.test(a)&&/^0\d/.test(b)){l.phone=a;l.phone2=b}}
+      }
+    }
+    // Back-compat: hydrate cbDate from followUp if it has a time and cbDate is empty
+    if(!l.cbDate&&l.followUp){
+      const fu=parseFollowUp(l.followUp);
+      if(fu&&fu.hasTime){
+        const d=new Date(fu.ts);
+        l.cbDate=`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+        if(fu.rangeEnd&&!l.cbEndTime)l.cbEndTime=fu.rangeEnd;
+        if(!l.cbSetAt)l.cbSetAt=Date.now();
+      }
+    }
+  });
+  showApp();render();flashDot(true);
+}
+function clearSession(){if(!confirm('Clear all session data? Export first if you care about it.'))return;localStorage.removeItem(SAVE_KEY);idbSave(null);location.reload()}
+
+// ===== Prefs =====
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY));if(p)prefs={...prefs,...p}}catch(e){}if(!Array.isArray(prefs.subjects)||!prefs.subjects.length)prefs.subjects=[...DEFAULT_SUBJECTS];if(!prefs.usedSubjects||typeof prefs.usedSubjects!=='object')prefs.usedSubjects={};if(!Array.isArray(prefs.dismissedOverdue))prefs.dismissedOverdue=[];if(typeof prefs.autoQueue!=='boolean')prefs.autoQueue=true;if(!prefs.clScheme)prefs.clScheme=CL_SCHEME_DEFAULT;if(!prefs.signature)prefs.signature=DEFAULT_SIGNATURE;if(!prefs.emailTemplates||typeof prefs.emailTemplates!=='object')prefs.emailTemplates={};if(!prefs.subjectDomainLock||typeof prefs.subjectDomainLock!=='object')prefs.subjectDomainLock={}}
+function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs))}catch(e){}}
+
+// ===== Setup / user =====
+function loadUser(){try{const u=JSON.parse(localStorage.getItem(SETUP_KEY));if(u&&u.name){user=u;return true}}catch(e){}return false}
+function openSetup(){document.getElementById('setup-name').value=user.name||'Sandde';document.getElementById('setup-email').value=user.email||'info@aresfit.co.uk';document.getElementById('setup-modal').style.display='flex'}
+function closeSetup(){document.getElementById('setup-modal').style.display='none'}
+function saveSetup(){
+  const n=document.getElementById('setup-name').value.trim()||'Sandde';
+  const e=document.getElementById('setup-email').value.trim()||'info@aresfit.co.uk';
+  user={name:n,email:e};
+  try{localStorage.setItem(SETUP_KEY,JSON.stringify(user))}catch(err){console.warn('localStorage blocked in this preview — settings kept in memory only',err)}
+  document.getElementById('setup-modal').style.display='none';
+  if(!leads.length){
+    document.getElementById('upload-screen').style.display='flex';
+    if(hasSession())document.getElementById('resume-box').style.display='block';
+  } else { render(); }
+}
+function openSettings(){
+  document.getElementById('st-name').textContent=user.name||'(not set)';
+  document.getElementById('st-email').textContent=user.email||'';
+  const sel=document.getElementById('cl-scheme-sel');
+  if(sel)sel.innerHTML=CL_SCHEME_OPTIONS.map(o=>`<option value="${esc(o.value)}"${(prefs.clScheme||CL_SCHEME_DEFAULT)===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
+  applyTheme(); // refresh theme button label
+  document.getElementById('settings-modal').style.display='flex';
+}
+function saveClScheme(v){prefs.clScheme=v;savePrefs();showToast('CircleLoop scheme set → '+v)}
+function applyTheme(){
+  const light=(prefs.theme==='light');
+  document.body.classList.toggle('light-mode',light);
+  const btn=document.getElementById('theme-toggle-btn');
+  if(btn)btn.textContent=light?'☀ Switch to dark mode':'🌙 Switch to light mode';
+}
+function toggleTheme(){prefs.theme=(prefs.theme==='light')?'dark':'light';savePrefs();applyTheme();showToast(prefs.theme==='light'?'☀ Light mode':'🌙 Dark mode')}
+function closeSettings(){document.getElementById('settings-modal').style.display='none'}
+
+// ===== CSV import =====
+function handleFile(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{const rows=parseCSV(e.target.result);if(rows.length<2){alert('CSV looks empty');return}
+    headers=rows[0].map(h=>h.trim().replace(/^\ufeff/,''));
+    raw=rows.slice(1).map(cols=>{const o={};headers.forEach((h,i)=>o[h]=(cols[i]||'').trim());return o}).filter(r=>Object.values(r).some(v=>v));
+    showMapping();
+  };
+  r.readAsText(f);
+}
+function showMapping(){
+  mapping={};
+  FIELDS.forEach(f=>{const lbl=LABELS[f];if(headers.includes(lbl))mapping[f]=lbl});
+  const grid=document.getElementById('map-grid');
+  grid.innerHTML=FIELDS.map(f=>`<div><label>${LABELS[f]}</label><select id="map-${f}">${['',...headers].map(h=>`<option value="${esc(h)}"${mapping[f]===h?' selected':''}>${esc(h)||'— skip —'}</option>`).join('')}</select></div>`).join('');
+  // Preview
+  document.getElementById('preview-tbl').innerHTML=`<tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`+raw.slice(0,3).map(r=>`<tr>${headers.map(h=>`<td>${esc((r[h]||'').slice(0,50))}</td>`).join('')}</tr>`).join('');
+  // Stats
+  const ph=mapping.phone||'Phone', nm=mapping.business||'Business Name', st=mapping.status||'Status';
+  let dnc=0,dead=0,noP=0,noN=0;
+  raw.forEach(r=>{const s=(r[st]||'').toUpperCase();if(s==='DNC'||s==='DO NOT CALL')dnc++;else if(s==='DEAD')dead++;if(!(r[ph]||'').replace(/\D/g,''))noP++;if(!(r[nm]||'').trim())noN++});
+  const extra=headers.filter(h=>!FIELDS.some(f=>LABELS[f]===h));
+  document.getElementById('import-info').innerHTML=`<div class="import-stats"><strong>${raw.length}</strong> total rows · <strong>${extra.length}</strong> legacy cols preserved: <span style="color:var(--txt3);font-size:11px">${extra.map(esc).join(', ')||'(none)'}</span><br><span class="warn">${dnc} DNC</span>, ${dead} Dead, ${noP} no phone, ${noN} no name<br><strong>~${raw.length-noP-noN} callable</strong> after filter</div>`;
+  document.getElementById('map-modal').style.display='flex';
+}
+function confirmImport(){
+  FIELDS.forEach(f=>{mapping[f]=document.getElementById('map-'+f).value});
+  leads=[];idx=0;filter='All';activeFilters=['All'];
+  raw.forEach((r,i)=>{
+    const rowN=i+1;
+    const nm=mapping.business?(r[mapping.business]||'').trim():'';
+    const ph=mapping.phone?(r[mapping.phone]||'').replace(/\D/g,''):'';
+    if(!nm||!ph)return;
+    const o={
+      id:i, row:rowN, rawIdx:i,
+      attempts:0, notes:[], cbDate:'', cbSetAt:0, phone2:'', email2:'',
+      preflightPassed:false, mobileVerified:false, michaelAlsoCalled:false, providerReject:false,
+      pending:{outcome:'',text:'',callStartTs:0,editedHm:''}
+    };
+    FIELDS.forEach(f=>o[f]=mapping[f]?(r[mapping[f]]||''):'');
+    // Two-email support: split on pipe/comma/semicolon. First = primary, second = email2.
+    if(o.email&&/[|,;]/.test(o.email)){
+      const parts=String(o.email).split(/[|,;]+/).map(s=>s.trim()).filter(s=>s.includes('@'));
+      o.email=parts[0]||'';
+      o.email2=parts[1]||'';
+    }
+    // Two-number support: detect when a single Phone cell contains multiple numbers.
+    // Real sheets use various separators: pipe, comma, slash, semicolon, " and ", line-break.
+    // Also handle the "no separator" case where two 11-digit UK numbers are smashed together.
+    if(o.phone){
+      let parts=String(o.phone)
+        .split(/[|,;/\n\r]|\s+(?:and|or|alt|mobile|landline)\s+/i)
+        .map(s=>s.trim())
+        .filter(s=>s.replace(/\D/g,'').length>=10);
+      if(parts.length>=2){
+        o.phone=parts[0];
+        o.phone2=parts[1];
+      } else {
+        // No separator. Fall back to digit-count split.
+        const digits=String(o.phone).replace(/\D/g,'');
+        if(digits.length===22){
+          // Two complete 11-digit UK numbers concatenated — split at position 11.
+          o.phone=digits.slice(0,11);
+          o.phone2=digits.slice(11);
+        } else if(digits.length===21){
+          // 10+11 or 11+10. Look for '07' boundary mid-string.
+          const at=digits.indexOf('07',10);
+          if(at>0){o.phone=digits.slice(0,at);o.phone2=digits.slice(at)}
+          else {o.phone=(parts[0]||o.phone).trim()}
+        } else if(digits.length>=20){
+          // Try midpoint split if both halves look like UK numbers
+          const a=digits.slice(0,11),b=digits.slice(11);
+          if(/^0\d/.test(a)&&/^0\d/.test(b)){o.phone=a;o.phone2=b}
+          else {o.phone=(parts[0]||o.phone).trim()}
+        } else {
+          o.phone=(parts[0]||o.phone).trim();
+        }
+      }
+    }
+    // Normalise Status case variants to match dropdown values
+    if(o.status)o.status=normStatus(o.status);
+    // Hydrate cbDate from Follow-up Date if it has a time component — restores pill on round-trip
+    if(o.followUp){
+      const fu=parseFollowUp(o.followUp);
+      if(fu&&fu.hasTime){
+        const d=new Date(fu.ts);
+        o.cbDate=`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+        if(fu.rangeEnd)o.cbEndTime=fu.rangeEnd;
+        o.cbSetAt=Date.now();
+      }
+    }
+    // Parse existing Notes column into a single legacy entry (preserves round-trip)
+    if(o.notes_raw===undefined){
+      const rawNotes=o.notes||'';
+      o.notes=[];
+      if(rawNotes.trim()){
+        o.notes.push({id:uid(),ts:0,dmy:'',hm:'',outcome:'legacy',text:rawNotes,legacy:true});
+      }
+    }
+    leads.push(o);
+  });
+  document.getElementById('map-modal').style.display='none';
+  showApp();save();render();
+}
+function showApp(){document.getElementById('upload-screen').style.display='none';document.getElementById('main-app').style.display='block'}
+
+// ===== Filters / search =====
+// Predicate per filter — used for multi-filter intersection logic.
+const FILTER_PREDICATES = {
+  All: () => true,
+  Recent: () => true, // sort handled below; everything passes
+  Uncalled: l => !l.notes.length && !(l.status||'').trim(),
+  Callback: l => {
+    if((l.status||'').trim()==='DO NOT CALL')return false;
+    if((l.status||'').trim()==='Callback')return true;
+    const fu=parseFollowUp(l.followUp);
+    if(fu&&fu.ts<=endOfToday())return true;
+    return false;
+  },
+  'Awaiting CB': l => (l.status||'').trim()==='Awaiting Callback',
+  Quoted: l => (l.status||'').trim()==='Quoted'||(l.stage||'').trim()==='Quoted',
+  Hot: l => {const lp=((raw[l.rawIdx]||{})['Lead Priority']||'').toLowerCase();return (l.status||'').trim()==='Hot Lead'||l.notes.some(n=>n.outcome==='HOT')||lp==='hot'},
+  'VM': l => !!latestVmEntry(l),
+  Contacted: l => (l.stage||'').trim()==='Contacted',
+  Reached: l => l.notes.length>0||((l.status||'').trim()!==''),
+  DNC: l => (l.status||'').trim()==='DO NOT CALL',
+};
+function applyFilter(){
+  let r=leads.slice();
+  const active=(activeFilters||['All']).filter(f=>f!=='All');
+  // Intersection: row must satisfy every active filter predicate
+  if(active.length){
+    r=r.filter(l => active.every(f => (FILTER_PREDICATES[f]||(()=>true))(l)));
+  }
+  // Sort logic — applied in priority order, first matching filter wins
+  if(active.includes('Recent')){
+    if(!active.includes('DNC'))r=r.filter(l=>(l.status||'').trim()!=='DO NOT CALL');
+    r.sort((a,b)=>latestNoteTs(b)-latestNoteTs(a));
+    r=r.slice(0,50);
+  } else if(active.includes('Callback')){
+    if((prefs.callbackSort||'date')==='row'){
+      r.sort((a,b)=>(a.row||0)-(b.row||0));
+    } else {
+      r.sort((a,b)=>{
+        const fa=parseFollowUp(a.followUp);
+        const fb=parseFollowUp(b.followUp);
+        const aTs=fa?fa.ts:(a.cbDate?new Date(a.cbDate).getTime():Infinity);
+        const bTs=fb?fb.ts:(b.cbDate?new Date(b.cbDate).getTime():Infinity);
+        if(aTs!==bTs)return aTs-bTs;
+        return (a.row||0)-(b.row||0);
+      });
+    }
+  } else if(active.includes('Reached')){
+    const latestTs=l=>{const nl=l.notes.filter(n=>!n.legacy);return nl.length?Math.max.apply(null,nl.map(n=>n.ts||0)):0};
+    if((prefs.reachedSort||'date')==='row') r.sort((a,b)=>(a.row||0)-(b.row||0));
+    else r.sort((a,b)=>latestTs(b)-latestTs(a));
+  } else if(active.includes('VM')){
+    // Oldest VM/NA first — longest-waiting leads bubble to top so callbacks happen first
+    r.sort((a,b)=>{
+      const ea=latestVmEntry(a),eb=latestVmEntry(b);
+      return (ea?ea.ts:0)-(eb?eb.ts:0);
+    });
+  }
+  if(searchTerm){const s=searchTerm;r=r.filter(l=>(l.business||'').toLowerCase().includes(s)||(l.dm||'').toLowerCase().includes(s)||(l.phone||'').toLowerCase().includes(s)||(l.phone2||'').toLowerCase().includes(s)||('r'+l.row).includes(s)||String(l.row).includes(s)||(l.email||'').toLowerCase().includes(s)||(l.email2||'').toLowerCase().includes(s)||l.notes.some(n=>(n.text||'').toLowerCase().includes(s)))}
+  return r;
+}
+// Multi-filter toggle: tap a filter to add/remove. 'All' clears everything.
+// Empty selection auto-resets to 'All'. Intersection logic in applyFilter.
+function setFilter(f){
+  if(f==='All'){
+    activeFilters=['All'];
+  } else {
+    activeFilters=activeFilters.filter(x=>x!=='All');
+    if(activeFilters.includes(f)){
+      activeFilters=activeFilters.filter(x=>x!==f);
+      if(!activeFilters.length)activeFilters=['All'];
+    } else {
+      activeFilters.push(f);
+    }
+  }
+  filter=activeFilters[0]||'All';
+  idx=0;renderFilterBar();renderLeadList();save();
+}
+function onSearch(){searchTerm=document.getElementById('lead-search').value.trim().toLowerCase();renderLeadList()}
+
+// ===== Render =====
+function render(){
+  filtered=leads.slice(); // call card navigates whole list, not filtered
+  if(idx>=filtered.length)idx=Math.max(0,filtered.length-1);
+  renderCard();renderStats();renderBlockBanner();renderLeadList();renderFilterBar();renderDueQueueBanner();
+}
+function renderStats(){
+  const today=todayKey();
+  const isTodayNote=n=>!n.legacy&&n.ts&&(new Date(n.ts).toISOString().slice(0,10)===today);
+  let todayDials=0, todayContactedDials=0;
+  leads.forEach(l=>{
+    l.notes.forEach(n=>{
+      // Manual admin notes don't count as dials — they're not call activity
+      if(isTodayNote(n)&&!n.manual){
+        todayDials++;
+        if(['Contacted','HOT','Callback'].includes(n.outcome))todayContactedDials++;
+      }
+    });
+  });
+  const leadPri=l=>((raw[l.rawIdx]||{})['Lead Priority']||'').toLowerCase();
+  const hotLeads=leads.filter(l=>(l.status||'').trim()==='Hot Lead'||l.notes.some(n=>n.outcome==='HOT')||leadPri(l)==='hot').length;
+  const cbLeads=leads.filter(l=>(l.status||'').trim()==='Callback').length;
+  document.getElementById('s-calls').textContent=todayDials;
+  document.getElementById('s-rate').textContent=todayDials?Math.round(todayContactedDials/todayDials*100)+'%':'0%';
+  document.getElementById('s-cb').textContent=cbLeads;
+  document.getElementById('s-hot').textContent=hotLeads;
+}
+function renderBlockBanner(){
+  // Two-tier model based on 1,457-dial analysis (Sandde + Michael, 18/03-01/05).
+  // No meaningful dead zones during working hours (49-61% connect band 09:00-16:59).
+  // 17:00 dips to 46% but still viable. 18:00+ and pre-09:00 = venues unstaffed.
+  // Friday is highest connect day (64%) — old Friday PM penalty removed.
+  const h=new Date().getHours();
+  const dow=new Date().getDay();
+  const isWeekend=(dow===0||dow===6);
+  const inHours=(h>=9&&h<18);
+  let kind,ico,msg;
+  if(inHours&&!isWeekend){kind='prime';ico='🟢';msg='CALL · venues staffed, dial freely'}
+  else if(isWeekend){kind='dead';ico='🔴';msg=`DON'T CALL · weekend, venues closed`}
+  else if(h<9){kind='dead';ico='🔴';msg=`DON'T CALL · before 09:00, venues not staffed`}
+  else {kind='dead';ico='🔴';msg=`DON'T CALL · after 18:00, venues winding down`}
+  const tappable=kind!=='dead';
+  const hint=tappable?' · tap → callbacks':'';
+  document.getElementById('block-banner-slot').innerHTML=`<div class="block-banner ${kind}" ${tappable?`onclick="tapBlockBanner('${kind}')" style="cursor:pointer"`:''}><span class="ico">${ico}</span><span class="msg">${msg}${hint}</span></div>`;
+}
+function tapBlockBanner(kind){
+  // Single tap action during work hours: jump to callbacks (highest-value default).
+  if(kind==='prime'){setFilter('Callback');openLeads()}
+}
+function renderCard(){
+  const slot=document.getElementById('card-slot');
+  const l=filtered[idx];
+  if(!l){slot.innerHTML='<div class="card empty-card">No leads. Upload a CSV to get started.</div>';return}
+
+  const phoneFmt=format443(l.phone);
+  const phone2Fmt=format443(l.phone2);
+  const priClass=(l.priority||'').toUpperCase().includes('TOP')?'top':'';
+  const pending=l.pending||{outcome:'',text:'',callStartTs:0,editedHm:''};
+  const pendingTime=pending.editedHm||(pending.callStartTs?hhmm(pending.callStartTs):'');
+  const canNext=!pending.outcome||pending.text.trim().length>0||(pending.outcome in AUTOFILL_OUTCOMES);
+
+  const callInfo=pending.callStartTs?`<div class="call-info show">📞 Called <span class="t">${hhmm(pending.callStartTs)}</span> — number copied. Paste into CircleLoop if it didn't auto-launch.</div>`:'';
+
+  // P1: Virgin row check + gates
+  const virgin=!l.notes.some(n=>!n.legacy);
+  const digits=(l.phone||'').replace(/\D/g,'');
+  const digits2=(l.phone2||'').replace(/\D/g,'');
+  // is07 fires the mobile gate UI when EITHER number is mobile (single tickbox covers both)
+  const is07=digits.startsWith('07')||digits2.startsWith('07');
+  const gatesPassed=canCall(l,'primary');
+  const gatesPassed2=canCall(l,'secondary');
+  const dACount=deadAirCount(l);
+  const poolFlag=poolStatus(l.id);
+
+  // Due banner (P3) — when this lead IS the due/overdue one
+  const dueWhen=l.cbDate?esc((l.cbDate||'').replace('T',' ')):(l.followUp?esc(l.followUp):'today');
+  const dueBanner=poolFlag?`<div class="due-banner ${poolFlag==='overdue'?'overdue':''}"><h3>${poolFlag==='overdue'?'⚠ OVERDUE':'⏰ DUE NOW'} — ${dueWhen}</h3><div class="biz">Tap CALL when ready</div><div class="due-banner-btns"><button class="dismiss" onclick="dismissForToday(${l.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${l.id})">🗑 Clear callback</button></div></div>`:'';
+
+  // Gates
+  const mobileGate=is07?`<div class="gate mobile"><h4>📱 Mobile number on sheet</h4>
+    <label><input type="checkbox" ${l.mobileVerified?'checked':''} onchange="toggleFlag('mobileVerified')"> Verified this mobile number on the venue's own website</label>
+    <div class="hint">Mobile numbers are higher risk — always cross-check before dialling.</div>
+  </div>`:'';
+
+  // Deconflict bar + toggle
+  const deconBar=l.michaelAlsoCalled?`<div class="flag-bar">⚠ Michael also called this row — apologise if they mention a double-call</div>`:'';
+  const deconToggle=`<label class="deconflict-toggle"><input type="checkbox" ${l.michaelAlsoCalled?'checked':''} onchange="toggleFlag('michaelAlsoCalled')"> Michael also called this row</label>`;
+
+  // Dead Air 2x warning
+  const dA2xBar=dACount>=2?`<div class="flag-bar danger">🔇 ${dACount}× Dead Air on this row — skill says treat as VM. Find email, send follow-up.</div>`:'';
+
+  // DNC / Provider Reject visual
+  const dncBar=(l.status||'').trim()==='DO NOT CALL'?`<div class="flag-bar danger">⛔ DO NOT CALL — ${l.providerReject?'provider reject':'flagged'}. Do not dial.</div>`:'';
+
+  // Email button — only when email present and gates passed for general email, or always
+  const emailBtn=l.email?`<button class="email-btn" onclick="openEmailComposer()">📧 Compose email → ${esc(l.email)}</button>`:'';
+
+  // Swap chip slot (filled by updateSwapChip on input)
+  const swapChipHtml=(()=>{const m=detectBrand(pending.text||'');return m?`<div class="swap-chip" onclick="applyBrandSwap('${esc(m.brand)}','${esc(m.swap)}')"><span class="brand">${esc(m.brand)}</span> → swap: ${esc(m.swap)} <span style="opacity:.7;font-size:10px">· tap to append</span></div>`:''})();
+
+  slot.innerHTML=`
+    <div class="card">
+      ${dueBanner}
+      ${deconBar}
+      ${dA2xBar}
+      ${dncBar}
+      <div class="row-line">
+        <span class="r">R${l.row}</span>
+        ${l.priority?`<span class="pri ${priClass}">${esc(l.priority)}</span>`:''}
+        <span class="att" title="Attempts">${l.attempts||0} attempts</span>
+      </div>
+      <div class="biz-head" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${esc(l.business)}<button class="btn-sm btn-ghost" style="font-size:1em;padding:6px 10px;font-weight:500;line-height:1;align-self:center" onclick="copyBiz()" title="Copy business name">📋</button></div>
+      ${(()=>{
+        // Top-line context strip — at-a-glance summary so you know where you left off without scrolling notes
+        const lastTs=latestNoteTs(l);
+        const lastDated=l.notes.filter(n=>!n.legacy&&n.ts).sort((a,b)=>(b.ts||0)-(a.ts||0))[0];
+        const parts=[];
+        if(lastDated){
+          const days=Math.floor((Date.now()-lastDated.ts)/86400000);
+          const ago=days===0?'today':(days===1?'yesterday':`${days}d ago`);
+          parts.push(`Last: <strong>${esc(lastDated.outcome||'note')}</strong> ${ago}`);
+        } else if(l.notes.some(n=>n.legacy)){
+          parts.push('Legacy notes only');
+        } else {
+          parts.push('Never called');
+        }
+        if((l.attempts||0)>0)parts.push(`${l.attempts} ${l.attempts===1?'attempt':'attempts'}`);
+        if((l.status||'').trim()==='Hot Lead'){
+          // Find first HOT note for "Hot since" date
+          const hotNote=l.notes.filter(n=>n.outcome==='HOT'&&n.ts).sort((a,b)=>(a.ts||0)-(b.ts||0))[0];
+          if(hotNote){const days=Math.floor((Date.now()-hotNote.ts)/86400000);parts.push(`<span style="color:#ff4081">Hot ${days===0?'today':days+'d'}</span>`)}
+        }
+        if((l.status||'').trim()==='Quoted'){parts.push(`<span style="color:var(--purple)">Quoted</span>`)}
+        return `<div class="ctx-strip">${parts.join(' · ')}</div>`;
+      })()}
+      ${l.website?`<div class="sub"><a href="${esc(l.website)}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">${esc(l.website)} ↗</a></div>`:''}
+
+      <div class="fields">
+        <div class="field" onclick="editField('dm',event)">
+          <div class="field-lbl">Decision Maker <span class="edit">tap</span></div>
+          <div class="field-val ${l.dm?'':'empty'}" id="fv-dm">${l.dm?esc(l.dm):'+ add'}</div>
+        </div>
+        <div class="field" onclick="editField('phone',event)">
+          <div class="field-lbl">Phone <span class="edit">tap</span></div>
+          <div class="field-val mono ${phoneFmt?'':'empty'}" id="fv-phone">${phoneFmt||'+ add'}</div>
+        </div>
+        <div class="field" onclick="editField('phone2',event)">
+          <div class="field-lbl">Secondary number <span class="edit">tap</span></div>
+          <div class="field-val mono ${phone2Fmt?'':'empty'}" id="fv-phone2">${phone2Fmt||'+ add secondary'}</div>
+        </div>
+        <div class="field full" onclick="editField('email',event)">
+          <div class="field-lbl">Email <span class="edit">tap</span></div>
+          <div class="field-val ${l.email?'':'empty'}" id="fv-email">${l.email?esc(l.email):'+ add email'}</div>
+        </div>
+        <div class="field full" onclick="editField('email2',event)">
+          <div class="field-lbl">Secondary email <span class="edit">tap</span></div>
+          <div class="field-val ${l.email2?'':'empty'}" id="fv-email2">${l.email2?esc(l.email2):'+ add secondary email'}</div>
+        </div>
+        <div class="field" onclick="event.stopPropagation()">
+          <div class="field-lbl">Next Action</div>
+          <div class="dd" id="dd-status" onclick="toggleDD('status',event)">
+            <div class="dd-val">${l.status?esc(l.status):'—'}</div>
+            <div class="dd-caret">▾</div>
+            <div class="dd-list">${STATUS_OPTS.map(o=>`<div class="dd-opt ${(l.status||'')===o?'selected':''}" onclick="pickDD(event,'status','${esc(o)}')">${o||'—'}</div>`).join('')}</div>
+          </div>
+        </div>
+        <div class="field" onclick="event.stopPropagation()">
+          <div class="field-lbl">Funnel Stage</div>
+          <div class="dd" id="dd-stage" onclick="toggleDD('stage',event)">
+            <div class="dd-val">${l.stage?esc(l.stage):'—'}</div>
+            <div class="dd-caret">▾</div>
+            <div class="dd-list">${STAGE_OPTS.map(o=>`<div class="dd-opt ${(l.stage||'')===o?'selected':''}" onclick="pickDD(event,'stage','${esc(o)}')">${o||'—'}</div>`).join('')}</div>
+          </div>
+        </div>
+        <div class="field full" onclick="editField('equipBrands',event)">
+          <div class="field-lbl">Equipment Brands <span class="edit">tap</span></div>
+          <div class="field-val ${l.equipBrands?'':'empty'}" id="fv-equipBrands">${l.equipBrands?esc(l.equipBrands):'+ add if DM confirms kit'}</div>
+        </div>
+      </div>
+
+      ${deconToggle}
+      ${l.callAngle?`<details class="reveal" open><summary>Call angle</summary><div>${esc(l.callAngle)}</div></details>`:''}
+      ${l.aresBrands?`<div style="margin:6px 0"><span class="ref-chip"><strong style="color:var(--txt)">AresFit:</strong> ${esc(l.aresBrands)}</span></div>`:''}
+      ${l.research?`<details class="reveal"><summary>Research notes</summary><div>${esc(l.research)}</div></details>`:''}
+      ${(()=>{const bq=encodeURIComponent(l.business||'');const s='padding:9px;text-align:center;text-decoration:none;font-size:12px;color:var(--txt)';
+        // 🔎 Safari uses x-web-search:// on iOS — invokes the user's default search engine in Safari.
+        // Falls back to Google search URL on desktop / non-iOS where the scheme isn't supported.
+        const safariClick=`if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.location.href='x-web-search://?'+'${bq}';return false}`;
+        return `<details class="reveal"><summary>🔍 Research this lead</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"><a href="https://www.google.com/search?q=${bq}" onclick="${safariClick}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">🔎 Safari</a><a href="https://find-and-update.company-information.service.gov.uk/search/companies?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">🏛 Companies House</a><a href="https://www.facebook.com/search/top?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">📘 Facebook</a><a href="https://www.google.com/maps/search/${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">📍 Maps</a></div></details>`})()}
+
+      ${mobileGate}
+
+      ${callInfo}
+      <div class="call-row">
+        <button class="call-btn" onclick="tapCall('primary')" ${gatesPassed?'':'disabled'} style="${gatesPassed?'':'opacity:.4;cursor:not-allowed'}">📞 CALL<span class="n">${phoneFmt||'(no number)'}</span></button>
+        <button class="copy-btn" onclick="copyPhone()" title="Copy number">📋</button>
+      </div>
+      ${l.phone2?`<div class="call-row" style="margin-top:6px">
+        <button class="call-btn" onclick="tapCall('secondary')" ${gatesPassed2?'':'disabled'} style="${gatesPassed2?'':'opacity:.4;cursor:not-allowed;'}font-size:13px;padding:10px">📞 CALL (alt)<span class="n">${phone2Fmt}</span></button>
+        <button class="copy-btn" onclick="copyPhone2()" title="Copy alt number">📋</button>
+      </div>`:''}
+      ${emailBtn}
+
+      <div class="outcomes">
+        ${OUTCOMES.map(o=>`<button data-out="${esc(o)}" class="${pending.outcome===o?'sel':''}" onclick="setOutcome('${esc(o)}')">${outcomeLabel(o)}</button>`).join('')}
+      </div>
+
+      <div class="notes-wrap">
+        <div class="notes-lbl">
+          <span>Notes history ${l.notes.length?`· ${l.notes.length}`:''}</span>
+          ${l.notes.length?`<button class="btn-sm btn-ghost" style="font-size:10px;padding:3px 8px" onclick="copyNotes()">📋 Copy all</button>`:''}
+        </div>
+        <div class="notes-hist" id="notes-hist">${renderNotesHist(l)}</div>
+
+        <div class="notes-lbl" style="margin-top:10px">
+          <span>New note ${pending.outcome?`· <span style="color:var(--amber)">${esc(pending.outcome)}</span> pending`:'· pick outcome first'}</span>
+          ${pending.callStartTs?`<span class="time-pill" onclick="openTime('${l.id}','pending')" title="Edit call start time">⏱ ${pendingTime}</span>`:''}
+        </div>
+        <div class="new-note-row">
+          <textarea id="new-note" class="${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'pending':''}" placeholder="${pending.outcome?(AUTOFILL_OUTCOMES[pending.outcome]?'optional — will auto-fill \"'+AUTOFILL_OUTCOMES[pending.outcome]+'\" if blank':'who answered · brands · timing · next action'):'tap an outcome above'}" oninput="updatePending(this.value)">${esc(pending.text)}</textarea>
+        </div>
+        <div id="swap-chip-slot">${swapChipHtml}</div>
+        <div class="note-warn ${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'show':''}">⚠ Note required before logging — skill rule: notes = data vault</div>
+        ${pending.outcome==='Callback'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Callback direction</div><div style="display:flex;gap:4px"><button class="${(pending.direction||'out')==='out'?'sel':''}" onclick="setCbDirection('out')" style="flex:1;padding:8px;border-radius:8px;background:${(pending.direction||'out')==='out'?'#fff':'var(--card)'};color:${(pending.direction||'out')==='out'?'#000':'var(--txt)'};border:1px solid ${(pending.direction||'out')==='out'?'#fff':'var(--border)'};font-size:12px;font-weight:600">📤 I call them</button><button class="${pending.direction==='in'?'sel':''}" onclick="setCbDirection('in')" style="flex:1;padding:8px;border-radius:8px;background:${pending.direction==='in'?'#fff':'var(--card)'};color:${pending.direction==='in'?'#000':'var(--txt)'};border:1px solid ${pending.direction==='in'?'#fff':'var(--border)'};font-size:12px;font-weight:600">📥 They call me</button></div><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">Callback start date & time <span style="color:var(--amber)">· required</span></div><input type="datetime-local" id="cb-in" value="${esc(l.cbDate||'')}" onchange="updateCb(this.value)"><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">End time (optional — defines a window for "they call me")</div><input type="time" id="cb-end" value="${esc(l.cbEndTime||'')}" onchange="updateCbEnd(this.value)"></div>`:''}
+        ${l.cbDate&&pending.outcome!=='Callback'?`<div style="margin-top:8px;font-size:11px;color:var(--amber);cursor:pointer;padding:6px 8px;border:1px dashed var(--amber);border-radius:6px" onclick="openCbEdit()" title="Tap to edit or clear">📅 Scheduled callback: ${esc(l.cbDate.replace('T',' '))}${l.cbEndTime?` → ${esc(l.cbEndTime)}`:''} <span style="float:right;font-size:10px">✏ edit</span></div>`:''}
+      </div>
+
+      ${manualNoteOpen?`
+      <div class="manual-note-panel">
+        <div class="field-lbl" style="margin-bottom:4px">📝 Manual note <span style="color:var(--txt3);font-weight:400">· not tied to a call · doesn't count toward attempts</span></div>
+        <textarea id="manual-note-text" placeholder="Admin entry — e.g. '21d silent, parked', 'stale follow-up cleared', 'added to suppression list'" oninput="updateManualNoteText(this.value)" style="width:100%;min-height:60px;padding:8px;background:var(--card);border:1px solid var(--blue);border-radius:8px;color:var(--txt);font-size:13px">${esc(manualNoteText)}</textarea>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn-ghost" onclick="cancelManualNote()" style="flex:1">Cancel</button>
+          <button class="btn-red" onclick="saveManualNote()" style="flex:2">📝 Save note</button>
+        </div>
+      </div>
+      `:`<button class="btn-ghost" onclick="openManualNote()" style="width:100%;font-size:12px;margin-top:6px">📝 Add manual note</button>`}
+
+      <div class="nav-row">
+        <button class="btn-ghost" onclick="nav(-1)">← Prev</button>
+        <div class="pos">${filtered.length?idx+1:0} / ${filtered.length}</div>
+        <button class="next-btn" onclick="nav(1)" ${canNext?'':'disabled'}>${pending.outcome?'Log →':'Next →'}</button>
+      </div>
+    </div>
+  `;
+
+  // Dead Air 2x toast (once per render if >3s since last)
+  if(dACount>=2&&Date.now()-lastToastTs>5000){showToast('🔇 2× Dead Air on this row — treat as VM, send email instead of redialling','danger')}
+}
+function outcomeLabel(o){return {'Contacted':'✅ Contacted','VM':'📱 Voicemail','NA':'❌ No Answer','Emailed':'📧 Emailed','Awaiting Callback':'🔔 Awaiting Callback','Dead Air':'🔇 Dead Air','Provider Reject':'⛔ Provider Reject','Not Int.':'🚫 Not Interested','Callback':'📅 Callback','HOT':'🔥 Hot Lead'}[o]||o}
+// Smart display-time formatting for note text. Splits on ' - ' and sentence boundaries,
+// renders each chunk as a bulleted line. Storage stays raw, so CSV round-trip is unchanged.
+// Sandde keeps typing in his usual jumble — readability happens at render.
+function formatNoteText(text){
+  if(!text)return '';
+  const raw=String(text).trim();
+  // Split on:
+  //   - explicit newline (Sandde hits Enter mid-typing for an explicit bullet)
+  //   - ' - ' (space hyphen space — common in legacy CSV imports)
+  //   - sentence end (. or ! or ? followed by space + capital letter)
+  const chunks=raw.split(/[\r\n]+|\s+-\s+|(?<=[.!?])\s+(?=[A-Z0-9])/g).map(s=>s.trim()).filter(Boolean);
+  if(chunks.length<=1)return esc(raw);
+  return chunks.map(c=>`<div class="note-bullet">${esc(c)}</div>`).join('');
+}
+function renderNotesHist(l){
+  if(!l.notes.length)return '';
+  return l.notes.map(n=>{
+    const tapAttr=`onclick="openNoteEdit('${esc(l.id)}','${esc(n.id)}')" style="cursor:pointer" title="Tap to edit or delete"`;
+    if(n.legacy)return `<div class="entry legacy" ${tapAttr}>${formatNoteText(n.text)} <span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
+    const time=(n.dmy||n.hm)?`<span class="ts">${esc(n.dmy)}${n.hm?' '+esc(n.hm):''}</span>`:'';
+    if(n.manual){
+      // Manual admin notes — distinct from call outcomes, render in italic with blue marker
+      return `<div class="entry manual" ${tapAttr}><div class="entry-head">${time} <span class="oc">📝 Note</span></div>${formatNoteText(n.text)}<span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
+    }
+    const oc=n.outcome?` <span class="oc">${esc(n.outcome)}</span>`:'';
+    const dir=n.direction?` <span style="font-size:9px;font-weight:700;letter-spacing:.05em;color:${n.direction==='in'?'var(--amber)':'var(--blue)'}">[${n.direction==='in'?'📥 IN':'📤 OUT'}]</span>`:'';
+    const rng=n.cbEndTime?` <span style="color:var(--amber);font-family:var(--mono);font-size:11px">→ ${esc(n.cbEndTime)}</span>`:'';
+    return `<div class="entry" ${tapAttr}><div class="entry-head">${time}${oc}${dir}${rng}</div>${formatNoteText(n.text)}<span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
+  }).join('');
+}
+// ===== Manual notes (admin entries not tied to a call outcome) =====
+function openManualNote(){manualNoteOpen=true;manualNoteText='';renderCard();setTimeout(()=>{const t=document.getElementById('manual-note-text');if(t)t.focus()},50)}
+function cancelManualNote(){manualNoteOpen=false;manualNoteText='';renderCard()}
+function updateManualNoteText(v){manualNoteText=v}
+function saveManualNote(){
+  const l=filtered[idx];if(!l)return;
+  const text=(manualNoteText||'').trim();
+  if(!text){alert('Note text required');return}
+  const ts=Date.now();
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'Note',text,manual:true});
+  manualNoteOpen=false;manualNoteText='';
+  save();renderCard();renderLeadList();
+  showToast('📝 Manual note added');
+}
+function renderFilterBar(){
+  const bar=document.getElementById('filter-bar');
+  let html=FILTERS.map(f=>`<button class="${activeFilters.includes(f)?'active':''}" onclick="setFilter('${f}')">${f}</button>`).join('');
+  if(activeFilters.includes('Callback')){
+    const s=prefs.callbackSort||'date';
+    html+=`<div style="flex-basis:100%;height:0"></div><div style="display:flex;gap:4px;align-items:center;margin-top:6px"><span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">Sort:</span><button class="${s==='date'?'active':''}" onclick="setCallbackSort('date')">Date</button><button class="${s==='row'?'active':''}" onclick="setCallbackSort('row')">Row</button></div>`;
+  }
+  if(activeFilters.includes('Reached')){
+    const s=prefs.reachedSort||'date';
+    html+=`<div style="flex-basis:100%;height:0"></div><div style="display:flex;gap:4px;align-items:center;margin-top:6px"><span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">Sort:</span><button class="${s==='date'?'active':''}" onclick="setReachedSort('date')">Most recent</button><button class="${s==='row'?'active':''}" onclick="setReachedSort('row')">Row</button></div>`;
+  }
+  bar.innerHTML=html;
+  document.getElementById('leads-count').textContent=leads.length?`· ${leads.length} total`:'';
+}
+function setCallbackSort(v){prefs.callbackSort=v;savePrefs();renderFilterBar();renderLeadList()}
+function setReachedSort(v){prefs.reachedSort=v;savePrefs();renderFilterBar();renderLeadList()}
+function renderLeadList(){
+  const list=document.getElementById('lead-list');
+  const rows=applyFilter();
+  if(!rows.length){list.innerHTML='<div class="empty-card" style="padding:20px">No matches.</div>';return}
+  const activeId=filtered[idx]?filtered[idx].id:null;
+  const showRecent=activeFilters.includes('Recent');
+  const showVmNa=activeFilters.includes('VM');
+  list.innerHTML=rows.slice(0,300).map(l=>{
+    const stKey=(l.status||'').replace(/\s/g,'');
+    const pill=l.status?`<span class="st-pill">${esc(l.status)}</span>`:'';
+    const dnc=(l.status||'').trim()==='DO NOT CALL'?' dnc-row':'';
+    const over=isOverdueRow(l);
+    const today=!over&&isDueTodayRow(l);
+    const rowFlag=over?' overdue-row':(today?' due-today-row':'');
+    const fuBadge=over?'<span class="fu-badge overdue">OVERDUE</span>':(today?'<span class="fu-badge due">TODAY</span>':'');
+    let chip='';
+    if(showRecent)chip=`<span class="recent-chip">${esc(relTime(latestNoteTs(l)))}</span>`;
+    else if(showVmNa){const e=latestVmEntry(l);if(e)chip=`<span class="recent-chip">${esc(e.outcome)} ${esc(relTime(e.ts))}</span>`}
+    return `<div class="lead-item s-${stKey}${dnc}${rowFlag} ${l.id===activeId?'active':''}" onclick="jumpTo(${l.id})"><span class="r">R${l.row}</span>${chip}<span class="biz">${esc(l.business)}</span><span class="meta">${fuBadge}<span class="att">${l.attempts||0}</span>${pill}</span></div>`;
+  }).join('')+(rows.length>300?`<div class="empty-card" style="padding:10px;font-size:11px">+ ${rows.length-300} more (refine search)</div>`:'');
+}
+
+// ===== Leads modal =====
+function openLeads(){renderFilterBar();renderLeadList();document.getElementById('leads-modal').style.display='flex';setTimeout(()=>document.getElementById('lead-search').focus(),100)}
+function closeLeads(){document.getElementById('leads-modal').style.display='none'}
+function jumpTo(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();justLoggedId=null;idx=i;filtered=leads.slice();closeLeads();render();save();window.scrollTo({top:0,behavior:'smooth'})}
+
+// ===== Field editing =====
+function editField(f,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault()}
+  const l=filtered[idx];if(!l)return;
+  const el=document.getElementById('fv-'+f);if(!el)return;
+  const cur=l[f]||'';
+  // iOS AutoFill suppression for the email field — type=text + inputmode=email keeps the email keyboard
+  // but stops AutoFill Contact overlay hijacking the long-press paste menu.
+  // autocomplete=off, data-form-type=other, autocapitalize/autocorrect/spellcheck off = belt-and-braces.
+  const isEmail=(f==='email');
+  const inputMode=isEmail?'inputmode="email" ':'';
+  const phoneMode=(f==='phone'||f==='phone2')?'inputmode="tel" ':'';
+  const safeAttrs='autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-form-type="other" data-lpignore="true"';
+  el.innerHTML=`<input type="text" id="ei-${f}" value="${esc(cur)}" ${inputMode}${phoneMode}${safeAttrs} style="width:100%;padding:3px 0">`;
+  const ip=document.getElementById('ei-'+f);ip.focus();ip.select();
+  const finish=()=>{const v=ip.value.trim();l[f]=v;save();renderCard();renderLeadList()};
+  ip.addEventListener('blur',finish,{once:true});
+  ip.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ip.blur()}if(e.key==='Escape'){ip.value=cur;ip.blur()}});
+}
+function updateField(f,v){const l=filtered[idx];if(!l)return;l[f]=v;save();renderLeadList();renderStats()}
+function updateCb(v){const l=filtered[idx];if(!l)return;l.cbDate=v||'';l.cbSetAt=Date.now();save()}
+function updateCbEnd(v){const l=filtered[idx];if(!l)return;l.cbEndTime=v||'';save()}
+function openCbEdit(){
+  const l=filtered[idx];if(!l)return;
+  document.getElementById('cbe-header').textContent=`R${l.row} · ${l.business}`;
+  document.getElementById('cbe-date').value=l.cbDate||'';
+  document.getElementById('cbe-end').value=l.cbEndTime||'';
+  document.getElementById('cb-edit-modal').style.display='flex';
+}
+function closeCbEdit(){document.getElementById('cb-edit-modal').style.display='none'}
+function saveCbEdit(){
+  const l=filtered[idx];if(!l){closeCbEdit();return}
+  l.cbDate=document.getElementById('cbe-date').value||'';
+  l.cbEndTime=document.getElementById('cbe-end').value||'';
+  l.cbSetAt=Date.now();
+  save();closeCbEdit();renderCard();renderLeadList();renderDueQueueBanner();
+  showToast(l.cbDate?'✅ Callback updated':'🗑 Callback cleared');
+}
+function clearCbEdit(){
+  const l=filtered[idx];if(!l){closeCbEdit();return}
+  if(!confirm('Clear the scheduled callback? (Also clears Follow-up Date. Notes history untouched.)'))return;
+  l.cbDate='';l.cbEndTime='';l.cbSetAt=0;l.followUp='';
+  save();closeCbEdit();renderCard();renderLeadList();renderDueQueueBanner();
+  showToast('🗑 Callback cleared');
+}
+// Clear-callback from a due banner (card or top-of-screen) without opening the edit modal first.
+// Mirrors clearCbEdit but accepts a lead id so it works from any banner instance.
+function clearCbFromBanner(id){
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  if(!confirm('Clear this callback permanently? (Also clears Follow-up Date. Notes history untouched.)'))return;
+  l.cbDate='';l.cbEndTime='';l.cbSetAt=0;l.followUp='';
+  save();renderCard();renderLeadList();renderDueQueueBanner();
+  showToast('🗑 Callback cleared');
+}
+function setCbDirection(d){const l=filtered[idx];if(!l)return;if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:'',direction:'out'};l.pending.direction=d;save();renderCard()}
+
+// ===== P1: Gates =====
+// Now takes which='primary'|'secondary' so the mobile-verified rule applies to phone2 too.
+function canCall(l,which){
+  if(!l)return false;
+  const num=which==='secondary'?(l.phone2||''):(l.phone||'');
+  const digits=num.replace(/\D/g,'');
+  if(!digits)return false;
+  if(digits.startsWith('07')&&!l.mobileVerified)return false;
+  return true;
+}
+function deadAirCount(l){return l.notes.filter(n=>!n.legacy&&n.outcome==='Dead Air').length}
+function toggleFlag(field){
+  const l=filtered[idx];if(!l)return;
+  l[field]=!l[field];
+  save();renderCard();renderLeadList();
+}
+
+// ===== P2: Brand swap detection =====
+function detectBrand(text){
+  if(!text)return null;
+  const t=text.toLowerCase();
+  for(const brand of Object.keys(BRAND_MAP)){
+    if(t.includes(brand))return{brand,swap:BRAND_MAP[brand]};
+  }
+  return null;
+}
+function applyBrandSwap(brand,swap){
+  const l=filtered[idx];if(!l||!l.pending)return;
+  const addition=` → swap: ${swap}`;
+  if(l.pending.text.includes('→ swap:'))return;
+  l.pending.text=l.pending.text+addition;
+  save();renderCard();
+  setTimeout(()=>{const t=document.getElementById('new-note');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}},50);
+}
+function updateSwapChip(text){
+  const slot=document.getElementById('swap-chip-slot');if(!slot)return;
+  const m=detectBrand(text);
+  slot.innerHTML=m?`<div class="swap-chip" onclick="applyBrandSwap('${esc(m.brand)}','${esc(m.swap)}')"><span class="brand">${esc(m.brand)}</span> → swap: ${esc(m.swap)} <span style="opacity:.7;font-size:10px">· tap to append</span></div>`:'';
+}
+
+// ===== P3: Callback auto-queue =====
+function getDuePool(){
+  if(!prefs.autoQueue)return{due:[],overdue:[]};
+  const now=Date.now();const pool={due:[],overdue:[]};
+  const sot=startOfToday(),eot=endOfToday();
+  leads.forEach(l=>{
+    if((l.status||'').trim()==='DO NOT CALL')return;
+    if(isDismissedToday(l.id))return;
+    if(prefs.dismissedOverdue.includes(l.id))return;
+    // Prefer precise cbDate if set (in-app scheduled), else parse followUp from sheet
+    let ts=0, hasTime=false;
+    if(l.cbDate){const d=new Date(l.cbDate).getTime();if(!isNaN(d)){ts=d;hasTime=true}}
+    if(!ts){
+      const fu=parseFollowUp(l.followUp);
+      if(fu){ts=fu.ts;hasTime=fu.hasTime}
+    }
+    if(!ts)return;
+    if(hasTime){
+      const diff=now-ts;
+      if(diff>DUE_WINDOW_MS)pool.overdue.push(l);
+      else if(diff>=-DUE_WINDOW_MS)pool.due.push(l);
+    } else {
+      // Date-only: all-day due if today, overdue if past
+      const fuDate=new Date(ts);fuDate.setHours(0,0,0,0);
+      const fuDay=fuDate.getTime();
+      if(fuDay<sot)pool.overdue.push(l);
+      else if(fuDay<=eot)pool.due.push(l);
+    }
+  });
+  // Sort: oldest timestamp first (most overdue / earliest due)
+  const byTsAsc=(a,b)=>{
+    const getTs=(l)=>{if(l.cbDate){const d=new Date(l.cbDate).getTime();if(!isNaN(d))return d}const fu=parseFollowUp(l.followUp);return fu?fu.ts:0};
+    return getTs(a)-getTs(b);
+  };
+  pool.due.sort(byTsAsc);pool.overdue.sort(byTsAsc);
+  return pool;
+}
+function poolStatus(leadId){const p=getDuePool();if(p.overdue.some(l=>l.id===leadId))return'overdue';if(p.due.some(l=>l.id===leadId))return'due';return null}
+function renderDueQueueBanner(){
+  const slot=document.getElementById('due-queue-slot');if(!slot)return;
+  const pool=getDuePool();
+  // Combine overdue (priority) + due-today into one list to cycle through
+  const list=pool.overdue.concat(pool.due);
+  if(!list.length){slot.innerHTML='';return}
+  // Clamp index in case the list shrunk (item dismissed/cleared)
+  if(dueQueueIdx>=list.length)dueQueueIdx=0;
+  if(dueQueueIdx<0)dueQueueIdx=list.length-1;
+  const target=list[dueQueueIdx];
+  const isOver=dueQueueIdx<pool.overdue.length;
+  const total=list.length;
+  // Sticky overdue counter — always visible when there are due/overdue items, even if you're already on one.
+  // Collapsed pill shows both counts split (e.g. "⚠ 3 overdue · ⏰ 2 due today") so glance gives full picture.
+  if(prefs.queueBannerCollapsed){
+    const parts=[];
+    if(pool.overdue.length)parts.push(`⚠ ${pool.overdue.length} overdue`);
+    if(pool.due.length)parts.push(`⏰ ${pool.due.length} due today`);
+    slot.innerHTML=`<div onclick="toggleQueueBanner()" style="cursor:pointer;padding:8px 12px;margin-bottom:10px;border-radius:8px;border:2px solid ${pool.overdue.length?'var(--danger)':'var(--amber)'};background:${pool.overdue.length?'rgba(255,23,68,.08)':'rgba(255,171,0,.08)'};color:${pool.overdue.length?'var(--red2)':'var(--amber)'};font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>${parts.join(' · ')}</span><span style="font-size:10px;opacity:.7;white-space:nowrap">tap to expand ▾</span></div>`;
+    return;
+  }
+  // Expanded form — hide the "jump to lead" CTA if you're already on that row, but keep the banner visible
+  const onTarget=(target.id===(filtered[idx]||{}).id);
+  const whenLabel=target.cbDate?esc((target.cbDate||'').replace('T',' ')):(target.followUp?esc(target.followUp):'today');
+  // Cycle controls: only render when there's more than one to flip through
+  const cycleControls=total>1?`<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0;font-size:11px;color:var(--txt2)"><button onclick="cycleDueQueue(-1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1">‹</button><span>${dueQueueIdx+1} of ${total}</span><button onclick="cycleDueQueue(1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1">›</button></div>`:'';
+  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} — ${whenLabel}<button onclick="toggleQueueBanner()" title="Hide" style="float:right;background:transparent;border:none;color:var(--txt2);font-size:12px;cursor:pointer;padding:0 4px;line-height:1">▲</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div>${cycleControls}<div class="due-banner-btns">${onTarget?'':`<button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button>`}<button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${target.id})">🗑 Clear callback</button></div></div>`;
+}
+function cycleDueQueue(dir){
+  const pool=getDuePool();
+  const total=pool.overdue.length+pool.due.length;
+  if(!total)return;
+  dueQueueIdx=((dueQueueIdx+dir)%total+total)%total;
+  renderDueQueueBanner();
+}
+function toggleQueueBanner(){prefs.queueBannerCollapsed=!prefs.queueBannerCollapsed;savePrefs();renderDueQueueBanner()}
+function jumpToDue(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();idx=i;filtered=leads.slice();render();window.scrollTo({top:0,behavior:'smooth'})}
+function dismissDue(id){if(!prefs.dismissedOverdue.includes(id))prefs.dismissedOverdue.push(id);savePrefs();renderDueQueueBanner();renderCard()}
+
+// ===== P3 + Ship 1: Email composer =====
+function pickSubject(){
+  const k=todayKey();const used=prefs.usedSubjects[k]||[];
+  const avail=(prefs.subjects||DEFAULT_SUBJECTS).filter(s=>!used.includes(s));
+  if(avail.length)return avail[0];
+  showToast('⚠ All subjects used today — reusing oldest','danger');
+  return (prefs.subjects||DEFAULT_SUBJECTS)[0]||'Introducing AresFit';
+}
+function detectBrandSwap(brands){
+  if(!brands)return null;
+  const t=brands.toLowerCase();
+  for(const b of Object.keys(BRAND_MAP)){if(t.includes(b))return BRAND_MAP[b]}
+  return null;
+}
+function canPitch(l){
+  if(!l)return false;
+  return l.notes.some(n=>!n.legacy&&n.outcome==='Contacted')&&!!(l.equipBrands||'').trim();
+}
+function inferReality(l){
+  if(!l)return 'cold';
+  const recent=l.notes.filter(n=>!n.legacy).slice(-5);
+  if(recent.some(n=>n.outcome==='EMAIL'))return 'followUp';
+  if(recent.some(n=>n.outcome==='Not Int.'))return 'notIntPolite';
+  return 'cold';
+}
+function resolveTokens(tmpl,l,opts){
+  opts=opts||{};
+  const schedule=SCHEDULE_OPTS.find(s=>s.value===opts.schedule)||SCHEDULE_OPTS[0];
+  const swap=detectBrandSwap(l.equipBrands)||'Star Trac cardio, Nautilus resistance';
+  return (tmpl||'')
+    .replace(/\{BUSINESS\}/g,l.business||'')
+    .replace(/\{DM\}/g,(l.dm||'').trim()||'there')
+    .replace(/\{BRANDS\}/g,(l.equipBrands||'').trim()||'your current equipment')
+    .replace(/\{SWAP\}/g,swap)
+    .replace(/\{ATTEMPTS\}/g,(function(a){if(a>=3)return'a few times';if(a===2)return'a couple of times';return''})(l.attempts||0))
+    .replace(/\{STAFF_NAME\}/g,(opts.staffName||'').trim()||'reception')
+    .replace(/\{SCHED_PAST\}/g,schedule.past)
+    .replace(/\{SCHED_FOLLOWUP_PERIOD\}/g,schedule.period)
+    // Sig is no longer embedded — Gmail auto-appends the account-level signature on send.
+    // Embedding caused double-ups. Token resolves to empty string + trailing blank lines stripped.
+    .replace(/\{SIGNATURE\}/g,'')
+    .replace(/\n{3,}/g,'\n\n')
+    .replace(/\s+$/,'');
+}
+function getTemplate(key){return (prefs.emailTemplates&&prefs.emailTemplates[key])||DEFAULT_TEMPLATES[key]||DEFAULT_TEMPLATES.cold}
+function buildBodyForComposer(){
+  const l=filtered[idx];if(!l)return '';
+  const reality=document.getElementById('c-reality').value;
+  const schedule=document.getElementById('c-schedule').value;
+  const staffName=document.getElementById('c-staff').value;
+  const pitchBox=document.getElementById('c-pitch');
+  const pitch=!!(pitchBox&&pitchBox.checked);
+  let body=resolveTokens(getTemplate(reality),l,{schedule,staffName});
+  if(pitch&&canPitch(l)){
+    // Sig no longer in body — append pitch addendum at end. Gmail will auto-append its own sig on send.
+    const addn=resolveTokens(PITCH_ADDENDUM,l,{schedule,staffName});
+    body=(body.replace(/\s+$/,''))+'\n\n'+addn;
+  }
+  return body;
+}
+function suggestSubject(){
+  const reality=document.getElementById('c-reality').value;
+  let subj=SUBJECT_SUGGESTIONS[reality]||(prefs.subjects||DEFAULT_SUBJECTS)[0];
+  const k=todayKey();const used=prefs.usedSubjects[k]||[];
+  if(used.includes(subj)){
+    const avail=(prefs.subjects||DEFAULT_SUBJECTS).filter(s=>!used.includes(s));
+    if(avail.length)subj=avail[0];
+  }
+  document.getElementById('c-subject').value=subj;
+}
+function renderComposerWarnings(){
+  const slot=document.getElementById('c-warnings');if(!slot)return;
+  const body=document.getElementById('c-body').value||'';
+  const subject=document.getElementById('c-subject').value||'';
+  const reality=document.getElementById('c-reality').value;
+  const schedule=document.getElementById('c-schedule').value;
+  const l=filtered[idx];
+  const warnings=[];
+  // Rejected phrases (skill v10)
+  const scanText=(body+' '+subject).toLowerCase();
+  REJECTED_PHRASES.forEach(p=>{
+    const needle=p.toLowerCase();
+    const re=new RegExp('\\b'+needle.replace(/[-\/\\^$*+?.()|[\]{}]/g,'\\$&')+'\\b','i');
+    if(re.test(scanText))warnings.push({kind:'amber',msg:`Rejected phrase detected: "${p}"`});
+  });
+  // Em-dash literal check
+  if(/[—–]/.test(body+' '+subject))warnings.push({kind:'amber',msg:'Em dash "—" detected — skill says use hyphen "-"'});
+  // Friday follow-up
+  if(reality==='followUp'&&new Date().getDay()===5)warnings.push({kind:'amber',msg:'Friday follow-up — skill says don\'t, gets buried. Defer to Monday?'});
+  // Tomorrow on cold
+  const schedObj=SCHEDULE_OPTS.find(s=>s.value===schedule);
+  if(schedObj&&schedObj.warn&&reality==='cold')warnings.push({kind:'amber',msg:schedObj.warn});
+  // Domain mismatch
+  if(l&&l.email&&l.website){
+    const emailDom=(l.email.split('@')[1]||'').toLowerCase().trim();
+    const siteDom=(l.website||'').toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0];
+    const eCore=emailDom.split('.')[0];
+    const sCore=siteDom.split('.')[0];
+    if(eCore&&sCore&&eCore!==sCore&&!siteDom.includes(eCore)&&!emailDom.includes(sCore)){
+      warnings.push({kind:'danger',msg:`Email domain @${emailDom} ≠ website ${siteDom} — could be third-party sharing the space (renter, contractor). Verify before sending.`});
+    }
+  }
+  // Subject-per-domain 7-day lock
+  if(subject&&l&&l.email){
+    const dom=(l.email.split('@')[1]||'').toLowerCase();
+    const lock=(prefs.subjectDomainLock||{})[dom]||[];
+    const cutoff=Date.now()-7*86400000;
+    const recent=lock.filter(e=>(e.ts||0)>cutoff&&e.subject===subject);
+    if(recent.length)warnings.push({kind:'amber',msg:`Subject "${subject}" already used to @${dom} in the last 7 days`});
+  }
+  slot.innerHTML=warnings.map(w=>`<div class="c-warn ${w.kind==='danger'?'danger':''}">⚠ ${esc(w.msg)}</div>`).join('');
+}
+function refreshComposer(){
+  const l=filtered[idx];if(!l)return;
+  // Toggle pitch row visibility
+  const pwrap=document.getElementById('c-pitch-wrap');
+  if(pwrap)pwrap.style.display=canPitch(l)?'block':'none';
+  // Rebuild body
+  document.getElementById('c-body').value=buildBodyForComposer();
+  renderComposerWarnings();
+}
+function openEmailComposer(){
+  const l=filtered[idx];if(!l)return;
+  if(!l.email){showToast('No email on this row','danger');return}
+  const modal=document.getElementById('composer-modal');if(!modal)return;
+  document.getElementById('c-recipient').innerHTML=`R${l.row} ${esc(l.business)}`;
+  // Recipient picker: shows up only when email2 is set. Default = primary.
+  const picker=document.getElementById('c-recipient-picker');
+  if(l.email2){
+    picker.style.display='block';
+    picker.innerHTML=`<div class="field-lbl" style="margin-bottom:4px">Send to <span style="color:var(--amber)">· two emails on file</span></div>
+      <div style="display:flex;gap:4px"><label style="flex:1;cursor:pointer"><input type="radio" name="c-to" value="primary" checked style="margin-right:6px;width:auto">${esc(l.email)}</label></div>
+      <div style="display:flex;gap:4px;margin-top:4px"><label style="flex:1;cursor:pointer"><input type="radio" name="c-to" value="secondary" style="margin-right:6px;width:auto">${esc(l.email2)}</label></div>
+      <div style="display:flex;gap:4px;margin-top:4px"><label style="flex:1;cursor:pointer"><input type="radio" name="c-to" value="both" style="margin-right:6px;width:auto">Both</label></div>`;
+  } else {
+    picker.style.display='none';
+    picker.innerHTML='';
+  }
+  const rSel=document.getElementById('c-reality');
+  rSel.innerHTML=CALL_REALITY_OPTS.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+  rSel.value=inferReality(l);
+  const sSel=document.getElementById('c-schedule');
+  sSel.innerHTML=SCHEDULE_OPTS.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+  sSel.value='now';
+  document.getElementById('c-staff').value='';
+  const pitchBox=document.getElementById('c-pitch');if(pitchBox)pitchBox.checked=false;
+  suggestSubject();
+  refreshComposer();
+  modal.style.display='flex';
+}
+function closeComposer(){document.getElementById('composer-modal').style.display='none'}
+function launchFromComposer(){
+  const l=filtered[idx];if(!l||!l.email){showToast('No email on this row','danger');return}
+  const subject=(document.getElementById('c-subject').value||'').trim()||'AresFit';
+  const body=document.getElementById('c-body').value||'';
+  const reality=document.getElementById('c-reality').value;
+  const schedule=document.getElementById('c-schedule').value;
+  const pitchBox=document.getElementById('c-pitch');
+  const pitch=!!(pitchBox&&pitchBox.checked);
+  // Recipient pick — when email2 exists, honour the radio. Default = primary.
+  let toAddr=l.email;
+  const picked=(document.querySelector('input[name="c-to"]:checked')||{}).value;
+  if(l.email2&&picked==='secondary')toAddr=l.email2;
+  else if(l.email2&&picked==='both')toAddr=`${l.email},${l.email2}`;
+  // Final domain mismatch confirm (redundant w/ inline warning but blocks accidental sends)
+  const emailDom=(l.email.split('@')[1]||'').toLowerCase().trim();
+  const siteRaw=(l.website||'').toLowerCase().trim();
+  if(siteRaw){
+    const siteDom=siteRaw.replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0];
+    const eCore=emailDom.split('.')[0];
+    const sCore=siteDom.split('.')[0];
+    if(eCore&&sCore&&eCore!==sCore&&!siteDom.includes(eCore)&&!emailDom.includes(sCore)){
+      if(!confirm(`⚠ Email domain doesn't match website — could be third-party sharing the space (renter, contractor). Proceed?`))return;
+    }
+  }
+  _launchGmail(toAddr,subject,body);
+  // Track subject rotation (daily)
+  const k=todayKey();
+  if(!prefs.usedSubjects[k])prefs.usedSubjects[k]=[];
+  if(!prefs.usedSubjects[k].includes(subject))prefs.usedSubjects[k].push(subject);
+  // Subject-per-domain 7-day lock
+  if(!prefs.subjectDomainLock)prefs.subjectDomainLock={};
+  if(!prefs.subjectDomainLock[emailDom])prefs.subjectDomainLock[emailDom]=[];
+  prefs.subjectDomainLock[emailDom].push({subject,ts:Date.now()});
+  const cutoff30=Date.now()-30*86400000;
+  prefs.subjectDomainLock[emailDom]=prefs.subjectDomainLock[emailDom].filter(e=>(e.ts||0)>cutoff30);
+  savePrefs();
+  // Auto-log note
+  const ts=Date.now();
+  const tmplLabel=(CALL_REALITY_OPTS.find(r=>r.value===reality)||{}).label||reality;
+  const mode=pitch?'pitch':'generic';
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:`Sent to ${toAddr} · subject: "${subject}" · template: ${tmplLabel} · mode: ${mode} · send: ${schedule}`});
+  // Status auto-set (safe overwrite only)
+  if(STATUS_SAFE_OVERWRITE.includes((l.status||'').trim()))l.status='Emailed';
+  save();closeComposer();renderCard();renderLeadList();renderStats();
+  flashDot(true);
+  showToast(`📧 Email launched · "${subject}" · logged`);
+}
+function launchBlankFromComposer(){
+  const l=filtered[idx];if(!l||!l.email){showToast('No email on this row','danger');return}
+  const subject=pickSubject();
+  _launchGmail(l.email,subject,'');
+  const k=todayKey();
+  if(!prefs.usedSubjects[k])prefs.usedSubjects[k]=[];
+  if(!prefs.usedSubjects[k].includes(subject))prefs.usedSubjects[k].push(subject);
+  savePrefs();
+  const ts=Date.now();
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:`Blank compose launched · subject: "${subject}" · draft-in-Claude`});
+  if(STATUS_SAFE_OVERWRITE.includes((l.status||'').trim()))l.status='Emailed';
+  save();closeComposer();renderCard();renderLeadList();renderStats();
+  flashDot(true);
+  showToast(`📝 Blank Gmail opened · subject "${subject}" · Claude to draft body`);
+}
+function _launchGmail(to,subject,body){
+  const toEnc=encodeURIComponent(to);
+  const suEnc=encodeURIComponent(subject);
+  const bdEnc=encodeURIComponent(body);
+  const appUrl=`googlegmail://co?to=${toEnc}&subject=${suEnc}&body=${bdEnc}`;
+  const webUrl=`https://mail.google.com/mail/?view=cm&fs=1&to=${toEnc}&su=${suEnc}&body=${bdEnc}`;
+  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile){
+    let cancelled=false;
+    const hide=()=>{cancelled=true};
+    document.addEventListener('visibilitychange',hide,{once:true});
+    window.addEventListener('pagehide',hide,{once:true});
+    window.location.href=appUrl;
+    setTimeout(()=>{
+      document.removeEventListener('visibilitychange',hide);
+      window.removeEventListener('pagehide',hide);
+      if(!cancelled&&!document.hidden)window.open(webUrl,'_blank');
+    },1400);
+  } else {
+    window.open(webUrl,'_blank');
+  }
+}
+
+// Signature + templates editor
+function openTemplatesEditor(){
+  document.getElementById('tmpl-sig').value=prefs.signature||DEFAULT_SIGNATURE;
+  ['cold','receptionTransferred','managerBusy','notIntPolite','followUp'].forEach(k=>{
+    const el=document.getElementById('tmpl-'+k);if(el)el.value=getTemplate(k);
+  });
+  document.getElementById('templates-modal').style.display='flex';
+}
+function closeTemplates(){document.getElementById('templates-modal').style.display='none'}
+function saveTemplates(){
+  prefs.signature=(document.getElementById('tmpl-sig').value||'').trim()||DEFAULT_SIGNATURE;
+  prefs.emailTemplates={};
+  ['cold','receptionTransferred','managerBusy','notIntPolite','followUp'].forEach(k=>{
+    const el=document.getElementById('tmpl-'+k);if(!el)return;
+    const v=(el.value||'').trim();
+    if(v&&v!==DEFAULT_TEMPLATES[k])prefs.emailTemplates[k]=v;
+  });
+  savePrefs();closeTemplates();showToast('✅ Templates + signature saved');
+}
+function resetTemplates(){
+  if(!confirm('Reset signature and all templates to defaults?'))return;
+  prefs.signature=DEFAULT_SIGNATURE;prefs.emailTemplates={};savePrefs();openTemplatesEditor();showToast('✅ Reset to skill defaults');
+}
+
+// ===== Toast =====
+function showToast(msg,kind){
+  lastToastTs=Date.now();
+  const existing=document.querySelector('.toast');if(existing)existing.remove();
+  const t=document.createElement('div');t.className='toast'+(kind==='danger'?' danger':'');t.textContent=msg;document.body.appendChild(t);
+  setTimeout(()=>{if(t.parentNode)t.remove()},4500);
+}
+
+// ===== P4: Handover markdown =====
+function generateHandover(){
+  const today=todayKey();
+  const isToday=ts=>ts&&new Date(ts).toISOString().slice(0,10)===today;
+  const todayCalls=[];
+  leads.forEach(l=>{l.notes.forEach(n=>{if(!n.legacy&&isToday(n.ts))todayCalls.push({l,n})})});
+  todayCalls.sort((a,b)=>a.n.ts-b.n.ts);
+  const upcomingCbs=leads.filter(l=>(l.status||'').trim()==='Callback'&&l.cbDate).sort((a,b)=>new Date(a.cbDate)-new Date(b.cbDate));
+  const dncToday=leads.filter(l=>(l.status||'').trim()==='DO NOT CALL'&&l.notes.some(n=>!n.legacy&&isToday(n.ts)));
+  const hotToday=leads.filter(l=>(l.status||'').trim()==='Hot Lead'&&l.notes.some(n=>!n.legacy&&isToday(n.ts)));
+  const uncalled=leads.filter(l=>!l.notes.length&&!(l.status||'').trim()).sort((a,b)=>{
+    const pa=(a.priority||'').toLowerCase().includes('top')?0:1;
+    const pb=(b.priority||'').toLowerCase().includes('top')?0:1;
+    if(pa!==pb)return pa-pb;
+    return a.row-b.row;
+  });
+  const dialled=leads.filter(l=>l.notes.some(n=>!n.legacy)).length;
+  const contactedSet=new Set();
+  leads.forEach(l=>{if(l.notes.some(n=>!n.legacy&&['Contacted','HOT','Callback'].includes(n.outcome)))contactedSet.add(l.id)});
+  const contactPct=dialled?Math.round(contactedSet.size/dialled*100):0;
+  const subjUsedToday=(prefs.usedSubjects[today]||[]);
+  const lines=[];
+  lines.push(`# AresFit Dialer Handover — ${new Date().toLocaleString('en-GB')}`);
+  lines.push('');
+  lines.push(`**Session stats:** ${todayCalls.length} calls logged · ${contactPct}% contact · ${hotToday.length} new hot · ${upcomingCbs.length} callbacks on book`);
+  lines.push(`**Emails sent today:** ${subjUsedToday.length} (subjects used: ${subjUsedToday.map(s=>`"${s}"`).join(', ')||'none'})`);
+  lines.push('');
+  lines.push('## Today\'s calls');
+  if(!todayCalls.length)lines.push('_No calls logged today._');
+  else todayCalls.forEach(({l,n})=>lines.push(`- **R${l.row} ${l.business}** · ${n.dmy} ${n.hm} · **${n.outcome}** — ${n.text}`));
+  lines.push('');
+  lines.push('## Outstanding callbacks (all rows w/ Callback status)');
+  if(!upcomingCbs.length)lines.push('_None scheduled._');
+  else upcomingCbs.forEach(l=>lines.push(`- **R${l.row} ${l.business}** · ${(l.cbDate||'').replace('T',' ')} · DM: ${l.dm||'?'} · ${format443(l.phone)}`));
+  lines.push('');
+  lines.push('## Hot leads added today');
+  if(!hotToday.length)lines.push('_None._');
+  else hotToday.forEach(l=>lines.push(`- R${l.row} ${l.business}`));
+  lines.push('');
+  lines.push('## DNC / Provider Reject added today');
+  if(!dncToday.length)lines.push('_None._');
+  else dncToday.forEach(l=>lines.push(`- R${l.row} ${l.business}${l.providerReject?' (provider reject)':''}`));
+  lines.push('');
+  lines.push('## Tomorrow — top 10 uncalled by priority');
+  if(!uncalled.length)lines.push('_Sheet cleared, nothing uncalled._');
+  else uncalled.slice(0,10).forEach(l=>lines.push(`- R${l.row} ${l.business} · ${l.priority||'—'} · ${format443(l.phone)}`));
+  lines.push('');
+  lines.push('_Generated by AresFit Dialer Sandde v1._');
+  return lines.join('\n');
+}
+function showHandover(){const md=generateHandover();document.getElementById('handover-body').textContent=md;document.getElementById('handover-modal').style.display='flex'}
+function copyHandover(){copyToClipboard(document.getElementById('handover-body').textContent);flashDot(true);showToast('✅ Handover copied to clipboard')}
+function downloadHandover(){const md=document.getElementById('handover-body').textContent;const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const ts=new Date();a.download=`handover-${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.md`;a.click()}
+function closeHandover(){document.getElementById('handover-modal').style.display='none'}
+
+// ===== Subject pool editor =====
+function openSubjectEditor(){
+  const ta=document.getElementById('subjects-ta');if(ta)ta.value=(prefs.subjects||DEFAULT_SUBJECTS).join('\n');
+  document.getElementById('subjects-modal').style.display='flex';
+}
+function saveSubjects(){
+  const ta=document.getElementById('subjects-ta');if(!ta)return;
+  const lines=ta.value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!lines.length){alert('Keep at least one subject');return}
+  prefs.subjects=lines;savePrefs();
+  document.getElementById('subjects-modal').style.display='none';
+  showToast('✅ Subject pool saved');
+}
+function closeSubjects(){document.getElementById('subjects-modal').style.display='none'}
+function resetSubjectsToday(){if(!confirm('Reset today\'s used subjects list?'))return;const k=todayKey();prefs.usedSubjects[k]=[];savePrefs();showToast('✅ Subject tracker reset for today')}
+function toggleDD(f,ev){
+  if(ev)ev.stopPropagation();
+  document.querySelectorAll('.dd.open').forEach(d=>{if(d.id!=='dd-'+f)d.classList.remove('open')});
+  const el=document.getElementById('dd-'+f);if(el)el.classList.toggle('open');
+}
+function pickDD(ev,f,v){
+  if(ev)ev.stopPropagation();
+  const l=filtered[idx];if(!l)return;
+  l[f]=v;
+  const el=document.getElementById('dd-'+f);if(el)el.classList.remove('open');
+  save();renderCard();renderLeadList();renderStats();
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.dd'))document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'))});
+
+// ===== CALL =====
+function tapCall(which){
+  const l=filtered[idx];if(!l)return;
+  const num=which==='secondary'?(l.phone2||''):(l.phone||'');
+  const digits=num.replace(/\D/g,'');
+  if(!digits){alert('No phone number on this row');return}
+  // Mobile gate now applies to phone2 too — was only enforced on primary before.
+  if(digits.startsWith('07')&&!l.mobileVerified){alert('Mobile number — tick "verified on website" before dialling.');return}
+  // Auto-capture call start time
+  if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+  l.pending.callStartTs=Date.now();
+  l.pending.editedHm='';
+  // Clipboard copy — always, as failsafe
+  copyToClipboard(digits);
+  // Use user-selected scheme (default circleloop://call/). On desktop also works via Chrome extension.
+  const scheme=(prefs.clScheme||CL_SCHEME_DEFAULT);
+  try{window.location.href=scheme+digits}catch(e){}
+  save();renderCard();
+}
+function copyPhone(){const l=filtered[idx];if(!l)return;const d=(l.phone||'').replace(/\D/g,'');if(!d)return;copyToClipboard(d);flashDot(true)}
+function copyPhone2(){const l=filtered[idx];if(!l)return;const d=(l.phone2||'').replace(/\D/g,'');if(!d)return;copyToClipboard(d);flashDot(true)}
+function copyBiz(){const l=filtered[idx];if(!l||!l.business)return;copyToClipboard(l.business);flashDot(true);showToast(`📋 Copied: ${l.business}`)}
+function copyToClipboard(txt){
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);return}
+  }catch(e){}
+  const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);
+}
+function copyNotes(){
+  const l=filtered[idx];if(!l||!l.notes.length)return;
+  const s=l.notes.map(n=>n.legacy?n.text:`${n.dmy} ${n.hm} - ${n.outcome} - ${n.text}`).join(' | ');
+  copyToClipboard(s);flashDot(true);
+}
+
+// ===== Outcome / pending note =====
+function setOutcome(o){
+  const l=filtered[idx];if(!l)return;
+  if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+  l.pending.outcome=o;
+  // Picking a new outcome after just logging resets the just-logged state — button flips back to "Log →"
+  if(justLoggedId===l.id)justLoggedId=null;
+  save();renderCard();
+  setTimeout(()=>{const t=document.getElementById('new-note');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}},50);
+}
+function updatePending(v){
+  const l=filtered[idx];if(!l)return;
+  if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+  l.pending.text=v;
+  // Light-touch: update warn class without full re-render
+  const needsText=!!l.pending.outcome&&!v.trim()&&!(l.pending.outcome in AUTOFILL_OUTCOMES);
+  const warn=document.querySelector('.note-warn');if(warn)warn.classList.toggle('show',needsText);
+  const ta=document.getElementById('new-note');if(ta)ta.classList.toggle('pending',needsText);
+  const nb=document.querySelector('.next-btn');if(nb)nb.disabled=needsText;
+  updateSwapChip(v);
+  // Throttled save
+  clearTimeout(updatePending._t);updatePending._t=setTimeout(save,400);
+}
+function commitPending(){
+  const l=filtered[idx];if(!l)return false;
+  const p=l.pending||{};
+  if(!p.outcome)return true; // nothing to commit
+  // Auto-fill default text for low-info outcomes if user left note blank
+  if(!p.text.trim()){
+    if(AUTOFILL_OUTCOMES[p.outcome])p.text=AUTOFILL_OUTCOMES[p.outcome];
+    else return false; // other outcomes still require a note
+  }
+  const ts=p.callStartTs||Date.now();
+  const hm=p.editedHm||hhmm(ts);
+  const noteEntry={id:uid(),ts,dmy:ddmm(ts),hm,outcome:p.outcome,text:p.text.trim()};
+  if(p.outcome==='Callback'){
+    noteEntry.direction=p.direction||'out';
+    if(l.cbEndTime)noteEntry.cbEndTime=l.cbEndTime;
+  }
+  l.notes.push(noteEntry);
+  if(ATTEMPT_OUTCOMES.has(p.outcome))l.attempts=(l.attempts||0)+1;
+  // Auto-sync Status/Stage on certain outcomes — each outcome can upgrade multiple fields, each with its own safe-overwrite list
+  const rules=OUTCOME_AUTO_SET[p.outcome]||[];
+  rules.forEach(rule=>{if(rule.safe.includes((l[rule.field]||'').trim()))l[rule.field]=rule.value});
+  if(p.outcome==='Provider Reject'){l.status='DO NOT CALL';l.stage='Lost';l.providerReject=true}
+  // Clear pending
+  l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+  outcomesSinceBackup++;
+  if(outcomesSinceBackup>=BACKUP_INTERVAL){autoBackup();outcomesSinceBackup=0}
+  save();return true;
+}
+function nav(dir){
+  if(dir>0){
+    const l=filtered[idx];
+    // Two-tap separation: if there's a pending outcome to log, first tap commits + stays on row.
+    // Second tap (no pending, justLoggedId still set on this lead) advances.
+    if(l&&l.pending&&l.pending.outcome){
+      if(!l.pending.text.trim()&&!(l.pending.outcome in AUTOFILL_OUTCOMES)){
+        alert('Note required before logging. Type the note or clear the outcome.');return;
+      }
+      const lid=l.id;
+      if(!commitPending())return;
+      justLoggedId=lid;
+      render();
+      showToast('✅ Logged — tap Next to advance');
+      return; // do NOT advance on first tap
+    }
+    // No pending outcome → plain Next (advance regardless of justLogged state)
+  } else {
+    // Prev: commit if possible, don't block if not
+    commitPending();
+  }
+  // Leaving this row clears justLogged
+  justLoggedId=null;
+  idx=Math.max(0,Math.min(filtered.length-1,idx+dir));
+  render();window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== Time edit =====
+function openTime(leadId,noteId){
+  timeEditContext={leadId:String(leadId),noteId:String(noteId)};
+  const l=leads.find(x=>String(x.id)===String(leadId));if(!l){return}
+  let cur='';
+  if(noteId==='pending'){cur=l.pending?(l.pending.editedHm||(l.pending.callStartTs?hhmm(l.pending.callStartTs):'')):''}
+  else{const n=l.notes.find(x=>x.id===noteId);if(n)cur=n.hm||''}
+  document.getElementById('time-in').value=cur;
+  document.getElementById('time-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('time-in').focus(),80);
+}
+function closeTime(){document.getElementById('time-modal').style.display='none';timeEditContext=null}
+
+// Note edit / delete (issue #9)
+let noteEditContext=null;
+function openNoteEdit(leadId,noteId){
+  const l=leads.find(x=>String(x.id)===String(leadId));if(!l)return;
+  const n=l.notes.find(x=>String(x.id)===String(noteId));if(!n)return;
+  noteEditContext={leadId:String(leadId),noteId:String(noteId)};
+  document.getElementById('ne-header').textContent=`R${l.row} · ${l.business}`;
+  const sel=document.getElementById('ne-outcome');
+  const opts=n.legacy?['legacy',...OUTCOMES,'EMAIL','Note']:[...OUTCOMES,'EMAIL','Note'];
+  sel.innerHTML=opts.map(o=>`<option value="${esc(o)}"${n.outcome===o?' selected':''}>${esc(o)}</option>`).join('');
+  sel.onchange=renderNeCbFields;
+  document.getElementById('ne-date').value=n.dmy||'';
+  document.getElementById('ne-time').value=n.hm||'';
+  document.getElementById('ne-text').value=n.text||'';
+  // Pre-fill callback-specific fields
+  const dir=n.direction||(l.cbDate?(n.outcome==='Callback'?'out':''):'');
+  document.getElementById('ne-dir-out').dataset.sel=(dir==='out'||!dir)?'1':'0';
+  document.getElementById('ne-dir-in').dataset.sel=dir==='in'?'1':'0';
+  document.getElementById('ne-end').value=n.cbEndTime||l.cbEndTime||'';
+  document.getElementById('ne-queue').checked=true;
+  renderNeCbFields();
+  document.getElementById('note-edit-modal').style.display='flex';
+}
+function renderNeCbFields(){
+  const outcome=document.getElementById('ne-outcome').value;
+  const isCallback=outcome==='Callback';
+  document.getElementById('ne-cb-fields').style.display=isCallback?'block':'none';
+  // Style direction buttons based on selection
+  const out=document.getElementById('ne-dir-out'),inn=document.getElementById('ne-dir-in');
+  const paint=(el,on)=>{el.style.background=on?'#fff':'var(--card)';el.style.color=on?'#000':'var(--txt)';el.style.border='1px solid '+(on?'#fff':'var(--border)')};
+  paint(out,out.dataset.sel==='1');paint(inn,inn.dataset.sel==='1');
+}
+function setNeDirection(d){
+  document.getElementById('ne-dir-out').dataset.sel=d==='out'?'1':'0';
+  document.getElementById('ne-dir-in').dataset.sel=d==='in'?'1':'0';
+  renderNeCbFields();
+}
+function saveNoteEdit(){
+  if(!noteEditContext)return;
+  const l=leads.find(x=>String(x.id)===noteEditContext.leadId);if(!l){closeNoteEdit();return}
+  const n=l.notes.find(x=>String(x.id)===noteEditContext.noteId);if(!n){closeNoteEdit();return}
+  const newOutcome=document.getElementById('ne-outcome').value;
+  const newDate=document.getElementById('ne-date').value.trim();
+  const newTime=document.getElementById('ne-time').value.trim();
+  const newText=document.getElementById('ne-text').value.trim();
+  if(!newText){alert('Note text required');return}
+  if(newDate&&!/^\d{1,2}\/\d{1,2}$/.test(newDate)){alert('Bad date. Use DD/MM format');return}
+  let parsedTime='';
+  if(newTime){parsedTime=parseTime(newTime);if(!parsedTime){alert('Bad time. Use HH:MM');return}}
+  n.outcome=newOutcome;
+  n.dmy=newDate;
+  n.hm=parsedTime;
+  n.text=newText;
+  if(newOutcome==='legacy')n.legacy=true;else delete n.legacy;
+  if(newOutcome==='Note')n.manual=true;else delete n.manual;
+  // Callback-specific fields
+  if(newOutcome==='Callback'){
+    const dir=document.getElementById('ne-dir-in').dataset.sel==='1'?'in':'out';
+    const endT=document.getElementById('ne-end').value||'';
+    n.direction=dir;
+    if(endT)n.cbEndTime=endT;else delete n.cbEndTime;
+    // If user wants to queue it, write cbDate/cbEndTime onto the lead
+    if(document.getElementById('ne-queue').checked){
+      // Build cbDate from note date + time (DD/MM + HH:MM) — assume current year
+      if(newDate&&parsedTime){
+        const [dd,mm]=newDate.split('/').map(x=>parseInt(x,10));
+        const [hh,mi]=parsedTime.split(':').map(x=>parseInt(x,10));
+        const yr=new Date().getFullYear();
+        const iso=`${yr}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T${String(hh).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
+        l.cbDate=iso;
+        l.cbEndTime=endT;
+        l.cbSetAt=Date.now();
+        // Also auto-set row status=Callback if safe
+        if(STATUS_SAFE_OVERWRITE.includes((l.status||'').trim())||['Hot Lead','Awaiting Pass-Through'].includes((l.status||'').trim()))l.status='Callback';
+      }
+    }
+  } else {
+    delete n.direction;delete n.cbEndTime;
+  }
+  // Recalculate attempts
+  l.attempts=l.notes.filter(x=>!x.legacy&&ATTEMPT_OUTCOMES.has(x.outcome)).length;
+  save();closeNoteEdit();renderCard();renderLeadList();renderStats();renderDueQueueBanner();
+  showToast('✅ Note updated');
+}
+function deleteNoteEdit(){
+  if(!noteEditContext)return;
+  if(!confirm('Delete this note? Can\'t be undone.'))return;
+  const l=leads.find(x=>String(x.id)===noteEditContext.leadId);if(!l){closeNoteEdit();return}
+  l.notes=l.notes.filter(x=>String(x.id)!==noteEditContext.noteId);
+  l.attempts=l.notes.filter(x=>!x.legacy&&ATTEMPT_OUTCOMES.has(x.outcome)).length;
+  save();closeNoteEdit();renderCard();renderLeadList();renderStats();
+  showToast('🗑 Note deleted');
+}
+function closeNoteEdit(){document.getElementById('note-edit-modal').style.display='none';noteEditContext=null}
+
+// Add new lead (issue #11)
+function openNewLead(){
+  ['nl-biz','nl-phone','nl-dm','nl-email','nl-src'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  document.getElementById('new-lead-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('nl-biz').focus(),80);
+}
+function closeNewLead(){document.getElementById('new-lead-modal').style.display='none'}
+function saveNewLead(){
+  const biz=document.getElementById('nl-biz').value.trim();
+  const phone=document.getElementById('nl-phone').value.trim();
+  const dm=document.getElementById('nl-dm').value.trim();
+  const email=document.getElementById('nl-email').value.trim();
+  const src=document.getElementById('nl-src').value.trim().replace(/^r/i,'');
+  if(!biz){alert('Business name required');return}
+  if(!phone.replace(/\D/g,'')){alert('Valid phone required');return}
+  // Ensure headers exist (if brand new session with no import, create minimal set)
+  if(!headers||!headers.length)headers=SHEET_COLS.slice();
+  // Build raw row
+  const newRaw={};headers.forEach(h=>newRaw[h]='');
+  newRaw['Business Name']=biz;
+  newRaw['Phone']=phone;
+  if(dm)newRaw['PSC / Decision Maker']=dm;
+  if(email)newRaw['Email']=email;
+  if(src)newRaw['Research Notes']=`Added in-app. Source row: R${src}`;
+  raw.push(newRaw);
+  const rawIdx=raw.length-1;
+  // Build lead
+  const maxId=leads.reduce((m,l)=>Math.max(m,l.id||0),-1);
+  const maxRow=leads.reduce((m,l)=>Math.max(m,l.row||0),0);
+  const o={
+    id:maxId+1, row:maxRow+1, rawIdx,
+    attempts:0, notes:[], cbDate:'', cbSetAt:0,
+    preflightPassed:false, mobileVerified:false, michaelAlsoCalled:false, providerReject:false,
+    pending:{outcome:'',text:'',callStartTs:0,editedHm:''},
+    priority:'', business:biz, phone, website:'', status:'', stage:'',
+    followUp:'', equipBrands:'', aresBrands:'', dm, email, callAngle:'',
+    research:src?`Added in-app. Source row: R${src}`:''
+  };
+  leads.push(o);
+  save();closeNewLead();
+  // Jump to the new lead
+  filtered=leads.slice();idx=filtered.findIndex(x=>x.id===o.id);
+  filter='All';activeFilters=['All'];closeLeads();render();
+  showToast(`✅ Added R${o.row} ${biz}`);
+}
+function saveTime(){
+  if(!timeEditContext)return;
+  const raw=document.getElementById('time-in').value;
+  const parsed=parseTime(raw);
+  if(!parsed){alert('Bad time. Use HH:MM, 1432, or "half 2".');return}
+  const l=leads.find(x=>String(x.id)===timeEditContext.leadId);
+  if(!l){closeTime();return}
+  if(timeEditContext.noteId==='pending'){
+    if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+    l.pending.editedHm=parsed;
+    if(!l.pending.callStartTs)l.pending.callStartTs=Date.now();
+  } else {
+    const n=l.notes.find(x=>x.id===timeEditContext.noteId);
+    if(n)n.hm=parsed;
+  }
+  closeTime();save();render();
+}
+
+// ===== Export =====
+function exportCSV(){
+  if(!leads.length){alert('No leads');return}
+  // Reconstruct 22-column rows. Use original raw[] as source of truth for legacy cols,
+  // overwriting only the mapped 14 with current lead state.
+  const cols=SHEET_COLS;
+  const lines=[cols.map(csvEscape).join(',')];
+  // Rebuild map: for every original raw row index, find corresponding lead (if kept)
+  const byIdx=new Map();leads.forEach(l=>byIdx.set(l.rawIdx,l));
+  raw.forEach((r,i)=>{
+    const l=byIdx.get(i);
+    const rowObj={...r};
+    if(l){
+      // Overwrite the 14 mapped fields with lead state
+      if(mapping.priority)rowObj[mapping.priority]=l.priority||'';
+      if(mapping.business)rowObj[mapping.business]=l.business||'';
+      if(mapping.phone){
+        // Two-number export: join primary + secondary with ' | ' if phone2 is set.
+        rowObj[mapping.phone]=l.phone2?`${l.phone||''} | ${l.phone2}`:(l.phone||'');
+      }
+      if(mapping.website)rowObj[mapping.website]=l.website||'';
+      if(mapping.status)rowObj[mapping.status]=l.status||'';
+      if(mapping.stage)rowObj[mapping.stage]=l.stage||'';
+      if(mapping.followUp){
+        // If cbDate is set in-app, write the precise datetime back to Follow-up Date
+        // so external readers (Claude, spreadsheet) see the time too.
+        // Format: YYYY-MM-DD HH:MM (+ -HH:MM range if cbEndTime set)
+        let fu=l.followUp||'';
+        if(l.cbDate){
+          const d=l.cbDate.replace('T',' ');
+          fu=l.cbEndTime?`${d}-${l.cbEndTime}`:d;
+        }
+        rowObj[mapping.followUp]=fu;
+      }
+      if(mapping.equipBrands)rowObj[mapping.equipBrands]=l.equipBrands||'';
+      if(mapping.aresBrands)rowObj[mapping.aresBrands]=l.aresBrands||'';
+      if(mapping.dm)rowObj[mapping.dm]=l.dm||'';
+      if(mapping.email){
+        // Two-email export: join with ' | ' if email2 set, else just primary.
+        rowObj[mapping.email]=l.email2?`${l.email||''} | ${l.email2}`:(l.email||'');
+      }
+      if(mapping.callAngle)rowObj[mapping.callAngle]=l.callAngle||'';
+      if(mapping.research)rowObj[mapping.research]=l.research||'';
+      // Notes = join array with ' | '
+      if(mapping.notes){
+        const noteStr=l.notes.map(n=>n.legacy?n.text:`${n.dmy} ${n.hm} - ${n.outcome} - ${n.text}`).join(' | ');
+        rowObj[mapping.notes]=noteStr;
+      }
+    }
+    // Write line using original header order (headers[] from import)
+    lines.push(headers.map(h=>csvEscape(rowObj[h]||'')).join(','));
+  });
+  const csv=lines.join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const ts=new Date();const fn=`AresFit_Call_Sheet_${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click();
+  flashDot(true);
+}
+function autoBackup(){if(!leads.length)return;exportCSV()}
+function manualBackup(){exportCSV()}
+// ===== CircleLoop export wizard with optional dedupe =====
+// Normalise a phone number to digits-only with UK 0-prefix. Handles +44/44/0 variants.
+function clNormPhone(raw){
+  if(!raw)return '';
+  let d=String(raw).replace(/\D/g,'');
+  if(!d)return '';
+  if(d.startsWith('44')&&d.length===12)d='0'+d.slice(2);
+  else if(d.startsWith('440')&&d.length===13)d='0'+d.slice(3);
+  return d;
+}
+// Parse a CircleLoop EXPORT CSV (different format than the import — has phoneNumber1..10 + phoneNumberLabel1..10)
+// Returns a Set of normalised phone numbers already in CircleLoop.
+function parseClExport(csvText){
+  const set=new Set();
+  if(!csvText)return set;
+  const rows=parseCSV(csvText);
+  if(!rows.length)return set;
+  const headers=rows[0].map(h=>(h||'').trim().replace(/^﻿/,''));
+  // Find every "phoneNumberN" column (export uses phoneNumber1..10, import uses phoneNumber + phoneNumber1..3)
+  const phoneIdx=[];
+  headers.forEach((h,i)=>{if(/^phoneNumber\d*$/i.test(h))phoneIdx.push(i)});
+  for(let r=1;r<rows.length;r++){
+    const cells=rows[r];
+    phoneIdx.forEach(i=>{const p=clNormPhone(cells[i]);if(p)set.add(p)});
+  }
+  return set;
+}
+function openClExportModal(){
+  closeSettings();
+  document.getElementById('cl-export-file-input').value='';
+  document.getElementById('cl-export-status').textContent='No file dropped — will export all contacts.';
+  document.getElementById('cl-export-modal').style.display='flex';
+}
+function closeClExportModal(){document.getElementById('cl-export-modal').style.display='none'}
+let _clDedupeSet=null;
+function onClExportFile(ev){
+  const f=ev.target.files[0];if(!f){_clDedupeSet=null;document.getElementById('cl-export-status').textContent='No file dropped — will export all contacts.';return}
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      _clDedupeSet=parseClExport(e.target.result);
+      document.getElementById('cl-export-status').textContent=`✅ Loaded ${_clDedupeSet.size} existing CircleLoop phone numbers — dedupe ready.`;
+    }catch(err){
+      _clDedupeSet=null;
+      document.getElementById('cl-export-status').textContent='⚠ Could not parse the file. Try again or skip dedupe.';
+    }
+  };
+  r.readAsText(f);
+}
+function doClExport(){
+  const dedupeSet=_clDedupeSet;
+  closeClExportModal();
+  exportCircleLoopContacts(dedupeSet);
+  _clDedupeSet=null;
+}
+// CircleLoop contacts export — matches their exact CSV format from the Example Import CSV:
+//   global,companyName,fullName,firstName,lastName,email,jobTitle,phoneNumber,phoneNumberLabel,
+//   phoneNumber1,phoneNumberLabel1,phoneNumber2,phoneNumberLabel2,phoneNumber3,phoneNumberLabel3
+// One row per lead. phone goes in phoneNumber (work), phone2 in phoneNumber1 (mobile).
+function exportCircleLoopContacts(dedupeSet){
+  if(!leads.length){alert('No leads to export');return}
+  const headers=['global','companyName','fullName','firstName','lastName','email','jobTitle','phoneNumber','phoneNumberLabel','phoneNumber1','phoneNumberLabel1','phoneNumber2','phoneNumberLabel2','phoneNumber3','phoneNumberLabel3'];
+  const lines=[headers.join(',')];
+  let count=0, skipped=0;
+  leads.forEach(l=>{
+    if(!l.business||!l.phone)return;
+    // Dedupe against existing CircleLoop phones if a set was supplied
+    if(dedupeSet&&dedupeSet.size){
+      const p1=clNormPhone(l.phone);
+      const p2=clNormPhone(l.phone2);
+      if((p1&&dedupeSet.has(p1))||(p2&&dedupeSet.has(p2))){skipped++;return}
+    }
+    // Name handling: PSC field can be messy ("Mrs Katherine Jane Ritchie", "(Sav) Savvas Kyriacou - Founder/Owner",
+    // "Peter Birch (actual DM - ...)") so we keep fullName intact and only split firstName/lastName when clean.
+    const dm=(l.dm||'').trim();
+    let fullName=dm||l.business;
+    let firstName='', lastName='';
+    if(dm && !dm.includes('(') && !dm.includes(' - ')){
+      const parts=dm.split(/\s+/);
+      if(parts.length===1){firstName=parts[0]}
+      else if(parts.length===2){firstName=parts[0];lastName=parts[1]}
+      // 3+ words: leave first/last blank so CircleLoop relies on fullName
+    }
+    const row=[
+      'false',
+      csvEscape(l.business),
+      csvEscape(fullName),
+      csvEscape(firstName),
+      csvEscape(lastName),
+      csvEscape(l.email||''),
+      csvEscape(dm?'Decision Maker':''),
+      csvEscape(l.phone),
+      'work',
+      csvEscape(l.phone2||''),
+      l.phone2?'mobile':'',
+      '','','',''
+    ];
+    lines.push(row.join(','));
+    count++;
+  });
+  if(count===0){alert(skipped?`All ${skipped} leads are already in CircleLoop. Nothing new to export.`:'No contacts with a phone number to export');return}
+  const csv=lines.join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const ts=new Date();
+  const fnBase=dedupeSet?`CircleLoop_Import_NEW_ONLY_${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`:`CircleLoop_Contacts_${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fnBase;a.click();
+  const msg=dedupeSet?`📇 Exported ${count} NEW contacts (skipped ${skipped} already in CircleLoop)`:`📇 Exported ${count} contacts for CircleLoop import`;
+  showToast(msg);
+}
+
+// ===== Init =====
+loadPrefs();
+applyTheme();
+openIDB().catch(()=>{});
+loadUser(); // Hydrate user defaults if previously saved; else keep hardcoded Sandde defaults
+document.getElementById('upload-screen').style.display='flex';
+if(hasSession())document.getElementById('resume-box').style.display='block';
+
+// Drag-drop on upload zone
+const uz=document.getElementById('upload-zone');
+['dragover','dragenter'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.classList.add('drag')}));
+['dragleave','drop'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.classList.remove('drag')}));
+uz.addEventListener('drop',ev=>{const f=ev.dataTransfer.files[0];if(f){const r=new FileReader();r.onload=e=>{const rows=parseCSV(e.target.result);if(rows.length<2){alert('CSV looks empty');return}headers=rows[0].map(h=>h.trim().replace(/^\ufeff/,''));raw=rows.slice(1).map(cols=>{const o={};headers.forEach((h,i)=>o[h]=(cols[i]||'').trim());return o}).filter(r=>Object.values(r).some(v=>v));showMapping()};r.readAsText(f)}});
+
+// Refresh block banner every 5 min in case session crosses an hour
+setInterval(()=>{if(leads.length)renderBlockBanner()},5*60*1000);
+// Callback auto-queue check every 30s
+setInterval(()=>{if(leads.length){renderDueQueueBanner();renderLeadList()}},30000);
+</script>
+</body>
+</html>
