@@ -2017,6 +2017,11 @@ function queueGoogleCalendarLeadSync(l){
   if(!googleCalendarConnected()){
     gcalPendingFullSync=true;
     renderGoogleCalendarSettings();
+    if(googleCalendarClientId()){
+      requestGoogleCalendarToken('').then(()=>syncLeadToGoogleCalendar(l,{quiet:true})).catch(err=>{
+        showToast(err&&err.message?err.message:'Google Calendar needs reconnecting · callback remains in the app','danger');
+      });
+    }
     return;
   }
   setTimeout(()=>syncLeadToGoogleCalendar(l,{quiet:true}).catch(err=>{
@@ -2035,8 +2040,17 @@ async function syncAllCallbacksToGoogleCalendar(options){
   if(!googleCalendarConnected()){
     gcalPendingFullSync=true;
     renderGoogleCalendarSettings();
-    if(opts.manual)showToast('Connect Google Calendar first','danger');
-    return;
+    if(opts.manual&&googleCalendarClientId()){
+      try{
+        await requestGoogleCalendarToken('');
+      }catch(err){
+        showToast(err&&err.message?err.message:'Google Calendar connection required','danger');
+        return;
+      }
+    }else{
+      if(opts.manual)showToast('Add your Google OAuth Client ID, then connect Calendar','danger');
+      return;
+    }
   }
   const rows=leads.filter(l=>isActiveCallbackRow(l)&&calendarTimingForLead(l));
   gcalSyncRunning=true;
@@ -2063,6 +2077,11 @@ function queueCalendarFullSync(reason){
   renderGoogleCalendarSettings();
   if(googleCalendarConnected()){
     setTimeout(()=>syncAllCallbacksToGoogleCalendar({manual:false,reason:reason||''}),0);
+  }else if(googleCalendarClientId()){
+    requestGoogleCalendarToken('').then(()=>syncAllCallbacksToGoogleCalendar({manual:false,reason:reason||''})).catch(err=>{
+      const count=googleCalendarPendingCount();
+      if(count)showToast(count+' callback'+(count===1?'':'s')+' kept in app · reconnect Google Calendar to sync','danger');
+    });
   }else{
     const count=googleCalendarPendingCount();
     if(count)showToast(count+' callback'+(count===1?'':'s')+' ready for Google Calendar · connect in Settings');
