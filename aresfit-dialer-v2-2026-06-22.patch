@@ -1,0 +1,408 @@
+diff --git a/aresfit-dialer-sandde-v2.html b/aresfit-dialer-sandde-v2.html
+index 7747f26..2f75202 100644
+--- a/aresfit-dialer-sandde-v2.html
++++ b/aresfit-dialer-sandde-v2.html
+@@ -253,6 +253,10 @@ option{background:var(--card);color:var(--txt);padding:6px}
+ .modal-box{background:var(--panel);border-radius:14px;padding:16px;max-width:600px;width:100%;border:1px solid var(--border);position:relative;margin-top:20px;margin-bottom:20px}
+ .x-btn{position:absolute;top:10px;right:10px;background:none;color:var(--txt3);font-size:20px;padding:4px 10px}
+ .x-btn:hover{color:var(--txt)}
++.modal-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;padding-right:46px}
++.modal-head .logo{min-width:0}
++.modal-head .btn-sm{flex:0 0 auto;white-space:nowrap}
++@media (max-width:420px){.modal-head{align-items:flex-start;flex-direction:column;padding-right:44px}.modal-head .btn-sm{width:auto;max-width:calc(100vw - 112px)}}
+ h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3);margin-bottom:8px;font-weight:700}
+ 
+ /* Import mapping */
+@@ -373,7 +377,7 @@ th{background:var(--card);font-weight:600}
+ <div class="modal" id="leads-modal" style="display:none">
+   <div class="modal-box">
+     <button class="x-btn" onclick="closeLeads()">✕</button>
+-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
++    <div class="modal-head">
+       <div class="logo"><span>LEADS</span> <span style="font-size:11px;color:var(--txt3)" id="leads-count"></span></div>
+       <button class="btn-ghost btn-sm" onclick="openNewLead()" style="font-size:11px">+ New Lead</button>
+     </div>
+@@ -414,6 +418,7 @@ th{background:var(--card);font-weight:600}
+     <h2>Data</h2>
+     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportEventLog()">Export event log</button>
+     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportNotionDelta()">Export Notion delta</button>
++    <button class="btn-red" style="width:100%;margin-bottom:6px;padding:11px" onclick="exportSessionPackage()">Export handover + CSV package</button>
+     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="document.getElementById('csv-in').click()">📂 Upload new CSV (keeps session)</button>
+     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportCSV()">📥 Export CSV (full call sheet backup)</button>
+     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="manualBackup()">💾 Manual backup (same CSV download)</button>
+@@ -759,7 +764,19 @@ const CALL_OUTCOME_EVENT_MAP = {
+   'Callback':'customer waiting',
+   'HOT':'reached'
+ };
+-const FILTERS = ['All','Recent','Uncalled','Callback','Awaiting CB','Quoted','Hot','VM','Contacted','Reached','DNC'];
++const FILTERS = ['All','Recent','Uncalled','Callback','Future CB','Waiting','Parked','Verify','Stale CB','Awaiting CB','Quoted','Hot','VM','Contacted','Reached','DNC'];
++const CALLBACK_ROW_OVERRIDES = {
++  184:{state:'future callback',detail:'Park until 2026-10-01'},
++  228:{state:'parked/no current need',detail:'Touch base near winter/end-year'},
++  232:{state:'parked/no current need',detail:'No current need, intro email sent'},
++  234:{state:'waiting reply',detail:'WhatsApp sent to Jim, await response'},
++  236:{state:'parked/no current need',detail:'Not in position right now'},
++  245:{state:'contact verification needed',detail:'Corrected email/number, admin follow-up'},
++  271:{state:'future callback',detail:'Park until 2026-08-25'},
++  294:{state:'contact verification needed',detail:'Verify email/contact before more calls'},
++  300:{state:'future callback',detail:'Park until 2026-08-01'},
++  318:{state:'stale callback/remove',detail:'Old missed callback only'}
++};
+ 
+ // Save keys
+ const SAVE_KEY    = 'aresfit_sandde_v2_state';
+@@ -943,8 +960,21 @@ function safeFilePart(value,fallback='Rep'){
+ function exportDateDDMMYY(date=new Date()){
+   return `${pad2(date.getDate())}${pad2(date.getMonth()+1)}${String(date.getFullYear()).slice(-2)}`;
+ }
++function exportDateDDMMYYYY(date=new Date()){
++  return `${pad2(date.getDate())}-${pad2(date.getMonth()+1)}-${date.getFullYear()}`;
++}
++function exportTimeHHMM(date=new Date()){
++  return `${pad2(date.getHours())}${pad2(date.getMinutes())}`;
++}
++function exportStampShort(date=new Date()){
++  return `${exportTimeHHMM(date)}-${exportDateDDMMYY(date)}`;
++}
++function exportStampLong(date=new Date()){
++  return `${exportTimeHHMM(date)}-${exportDateDDMMYYYY(date)}`;
++}
+ function getExportFileName(){
+-  return `${exportDateDDMMYY()}_${safeFilePart(user && user.name,'Rep')}_export.csv`;
++  const d=new Date();
++  return `AresFit_Call_Sheet_${exportStampShort(d)}_${safeFilePart(user && user.name,'Rep')}.csv`;
+ }
+ function format443(s){const d=(s||'').replace(/\D/g,'');if(d.length<4)return d;if(d.length<8)return d.slice(0,4)+' '+d.slice(4);return d.slice(0,4)+' '+d.slice(4,8)+' '+d.slice(8)}
+ function ddmm(ts){const d=new Date(ts);return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)}
+@@ -1024,6 +1054,8 @@ function endOfToday(){const d=new Date();d.setHours(23,59,59,999);return d.getTi
+ function isOverdueRow(l){
+   if(!l)return false;
+   if((l.status||'').trim()==='DO NOT CALL')return false;
++  const cbState=classifyCallbackState(l).state;
++  if(['waiting reply','parked/no current need','contact verification needed','stale callback/remove'].includes(cbState))return false;
+   if(l.cbDate){const d=new Date(l.cbDate).getTime();if(!isNaN(d)&&d<Date.now()-DUE_WINDOW_MS)return true}
+   const fu=parseFollowUp(l.followUp);
+   if(fu&&fu.ts<startOfToday())return true;
+@@ -1032,10 +1064,51 @@ function isOverdueRow(l){
+ function isDueTodayRow(l){
+   if(!l)return false;
+   if((l.status||'').trim()==='DO NOT CALL')return false;
++  const cbState=classifyCallbackState(l).state;
++  if(['waiting reply','parked/no current need','contact verification needed','stale callback/remove'].includes(cbState))return false;
+   const fu=parseFollowUp(l.followUp);
+   if(fu){const s=startOfToday(),e=endOfToday();if(fu.ts>=s&&fu.ts<=e)return true}
+   return false;
+ }
++function allLeadText(l){
++  if(!l)return '';
++  const parts=[l.status,l.stage,l.followUp,l.callAngle,l.research,l.business,l.dm];
++  (l.notes||[]).forEach(n=>parts.push(n.text,n.outcome));
++  return parts.join(' ').toLowerCase();
++}
++function classifyCallbackState(l){
++  if(!l)return{state:'',detail:''};
++  const override=CALLBACK_ROW_OVERRIDES[l.row];
++  if(override)return override;
++  const st=(l.status||'').trim();
++  const text=allLeadText(l);
++  if(st==='DO NOT CALL')return{state:'',detail:''};
++  if(/waiting|await response|whatsapp sent|sent whatsapp|awaiting reply|customer waiting/.test(text))return{state:'waiting reply',detail:'Waiting for customer reply'};
++  if(/park|no current need|nothing immediate|winter|end of year|not in position|future-only|future only/.test(text))return{state:'parked/no current need',detail:'Parked or no current need'};
++  if(/verify|verification|wrong contact|no gmail proof|contact\/email|contact email|bad callback/.test(text))return{state:'contact verification needed',detail:'Needs contact verification'};
++  if(/stale|old missed|remove from active|do not chase/.test(text))return{state:'stale callback/remove',detail:'Stale callback'};
++  const fu=parseFollowUp(l.followUp);
++  const cbTs=l.cbDate?new Date(l.cbDate).getTime():0;
++  const targetTs=(!Number.isNaN(cbTs)&&cbTs)?cbTs:(fu?fu.ts:0);
++  if(targetTs&&targetTs>startOfToday())return{state:'future callback',detail:'Future dated callback'};
++  if(st==='Callback'||targetTs)return{state:'call-now',detail:'Active callback'};
++  if(st==='Awaiting Callback')return{state:'waiting reply',detail:'Awaiting callback'};
++  return{state:'',detail:''};
++}
++function isActiveCallNowCallback(l){return classifyCallbackState(l).state==='call-now'}
++function isCallbackState(l,state){return classifyCallbackState(l).state===state}
++function callbackStateLabel(l){
++  const c=classifyCallbackState(l);
++  const label={
++    'call-now':'CALL NOW',
++    'future callback':'FUTURE',
++    'waiting reply':'WAITING',
++    'parked/no current need':'PARKED',
++    'contact verification needed':'VERIFY',
++    'stale callback/remove':'STALE'
++  }[c.state]||'';
++  return label?{label,detail:c.detail||c.state}:null;
++}
+ // Dismiss-for-today helpers (resets naturally at midnight)
+ function isDismissedToday(id){
+   const k=todayKey();
+@@ -1239,9 +1312,18 @@ function canStartFreshDials(){
+ }
+ function isFreshDial(l){
+   if(!l)return false;
+-  if(l.notes&&l.notes.some(n=>!n.legacy))return false;
++  if(l.notes&&l.notes.length)return false;
+   const st=(l.status||'').trim();
+-  return !['Callback','Hot Lead','Quoted','DO NOT CALL'].includes(st);
++  if(st&&st!=='Uncalled')return false;
++  if((l.followUp||'').trim()||l.cbDate)return false;
++  return true;
++}
++function dialGateState(l){
++  if(!l)return{state:'blocked',message:'No lead selected'};
++  if((l.status||'').trim()==='DO NOT CALL')return{state:'blocked',message:'Do not call'};
++  if(!isFreshDial(l))return{state:'warm',message:'Warm approved: callable'};
++  if(canStartFreshDials())return{state:'fresh-allowed',message:'Fresh dials allowed'};
++  return{state:'fresh-blocked',message:'Fresh dials blocked'};
+ }
+ function saveQueueGate(){
+   ensureQueueGateState();
+@@ -1269,9 +1351,12 @@ function renderQueueGate(){
+   ensureQueueGateState();
+   const g=prefs.queueGate;
+   const allowed=canStartFreshDials();
+-  const msg=allowed?'Fresh dials allowed':'Fresh dials blocked until Warm queue reviewed and Blockers reviewed';
+-  const cls=allowed?'prime':'secondary';
+-  slot.innerHTML=`<div class="block-banner ${cls}" style="margin-bottom:6px"><span class="ico">${allowed?'OK':'!'}</span><span class="msg">${msg}${g.overrideReason?` - override: ${esc(g.overrideReason)}`:''}</span></div>`;
++  const l=filtered[idx];
++  const state=dialGateState(l);
++  const msg=state.state==='blocked'?state.message:(state.state==='warm'?'Warm approved row callable':(allowed?'Fresh dials allowed':'Fresh dials blocked until warm queue and blockers are reviewed'));
++  const cls=(allowed||state.state==='warm')&&state.state!=='blocked'?'prime':'secondary';
++  const detail=(state.state==='blocked')?'':(g.overrideReason?` - override: ${esc(g.overrideReason)}`:(state.state==='warm'?' - not treated as a fresh dial':''));
++  slot.innerHTML=`<div class="block-banner ${cls}" style="margin-bottom:6px"><span class="ico">${(allowed||state.state==='warm')&&state.state!=='blocked'?'OK':'!'}</span><span class="msg">${msg}${detail}</span></div>`;
+ }
+ function eventTimestamp(ts=Date.now()){return new Date(ts).toISOString().replace('Z','+00:00')}
+ function eventLocalDateKey(row){
+@@ -1596,14 +1681,13 @@ function showApp(){document.getElementById('upload-screen').style.display='none'
+ const FILTER_PREDICATES = {
+   All: () => true,
+   Recent: () => true, // sort handled below; everything passes
+-  Uncalled: l => !l.notes.length && !(l.status||'').trim(),
+-  Callback: l => {
+-    if((l.status||'').trim()==='DO NOT CALL')return false;
+-    if((l.status||'').trim()==='Callback')return true;
+-    const fu=parseFollowUp(l.followUp);
+-    if(fu&&fu.ts<=endOfToday())return true;
+-    return false;
+-  },
++  Uncalled: l => !l.notes.length && (!((l.status||'').trim())||(l.status||'').trim()==='Uncalled'),
++  Callback: l => isActiveCallNowCallback(l),
++  'Future CB': l => isCallbackState(l,'future callback'),
++  Waiting: l => isCallbackState(l,'waiting reply'),
++  Parked: l => isCallbackState(l,'parked/no current need'),
++  Verify: l => isCallbackState(l,'contact verification needed'),
++  'Stale CB': l => isCallbackState(l,'stale callback/remove'),
+   'Awaiting CB': l => (l.status||'').trim()==='Awaiting Callback',
+   Quoted: l => (l.status||'').trim()==='Quoted'||(l.stage||'').trim()==='Quoted',
+   Hot: l => {const lp=((raw[l.rawIdx]||{})['Lead Priority']||'').toLowerCase();return (l.status||'').trim()==='Hot Lead'||l.notes.some(n=>n.outcome==='HOT')||lp==='hot'},
+@@ -1691,7 +1775,7 @@ function renderStats(){
+   });
+   const leadPri=l=>((raw[l.rawIdx]||{})['Lead Priority']||'').toLowerCase();
+   const hotLeads=leads.filter(l=>(l.status||'').trim()==='Hot Lead'||l.notes.some(n=>n.outcome==='HOT')||leadPri(l)==='hot').length;
+-  const cbLeads=leads.filter(l=>(l.status||'').trim()==='Callback').length;
++  const cbLeads=leads.filter(isActiveCallNowCallback).length;
+   document.getElementById('s-calls').textContent=todayDials;
+   document.getElementById('s-rate').textContent=todayDials?Math.round(todayContactedDials/todayDials*100)+'%':'0%';
+   document.getElementById('s-cb').textContent=cbLeads;
+@@ -1999,10 +2083,12 @@ function renderLeadList(){
+     const today=!over&&isDueTodayRow(l);
+     const rowFlag=over?' overdue-row':(today?' due-today-row':'');
+     const fuBadge=over?'<span class="fu-badge overdue">OVERDUE</span>':(today?'<span class="fu-badge due">TODAY</span>':'');
++    const cbState=callbackStateLabel(l);
++    const cbBadge=cbState?`<span class="fu-badge due" title="${esc(cbState.detail)}">${esc(cbState.label)}</span>`:'';
+     let chip='';
+     if(showRecent)chip=`<span class="recent-chip">${esc(relTime(latestNoteTs(l)))}</span>`;
+     else if(showVmNa){const e=latestVmEntry(l);if(e)chip=`<span class="recent-chip">${esc(e.outcome)} ${esc(relTime(e.ts))}</span>`}
+-    return `<div class="lead-item s-${stKey}${dnc}${rowFlag} ${l.id===activeId?'active':''}" onclick="jumpTo(${l.id})"><span class="r">R${l.row}</span>${chip}<span class="biz">${esc(l.business)}</span><span class="meta">${fuBadge}<span class="att">${l.attempts||0}</span>${pill}</span></div>`;
++    return `<div class="lead-item s-${stKey}${dnc}${rowFlag} ${l.id===activeId?'active':''}" onclick="jumpTo(${l.id})"><span class="r">R${l.row}</span>${chip}<span class="biz">${esc(l.business)}</span><span class="meta">${fuBadge}${cbBadge}<span class="att">${l.attempts||0}</span>${pill}</span></div>`;
+   }).join('')+(rows.length>300?`<div class="empty-card" style="padding:10px;font-size:11px">+ ${rows.length-300} more (refine search)</div>`:'');
+ }
+ 
+@@ -2114,6 +2200,8 @@ function getDuePool(){
+   const sot=startOfToday(),eot=endOfToday();
+   leads.forEach(l=>{
+     if((l.status||'').trim()==='DO NOT CALL')return;
++    const cbState=classifyCallbackState(l).state;
++    if(['waiting reply','parked/no current need','contact verification needed','stale callback/remove'].includes(cbState))return;
+     if(isDismissedToday(l.id))return;
+     if(prefs.dismissedOverdue.includes(l.id))return;
+     // Prefer precise cbDate if set (in-app scheduled), else parse followUp from sheet
+@@ -2485,10 +2573,17 @@ function generateHandover(){
+   const todayCalls=[];
+   leads.forEach(l=>{l.notes.forEach(n=>{if(!n.legacy&&isToday(n.ts))todayCalls.push({l,n})})});
+   todayCalls.sort((a,b)=>a.n.ts-b.n.ts);
+-  const callbackRows=leads.filter(l=>(l.status||'').trim()==='Callback').sort((a,b)=>a.row-b.row);
++  const callbackRows=leads.filter(isActiveCallNowCallback).sort((a,b)=>a.row-b.row);
++  const callbackGroups={
++    'Future callbacks':leads.filter(l=>isCallbackState(l,'future callback')).sort((a,b)=>a.row-b.row),
++    'Waiting customer reply':leads.filter(l=>isCallbackState(l,'waiting reply')).sort((a,b)=>a.row-b.row),
++    'Parked / no current need':leads.filter(l=>isCallbackState(l,'parked/no current need')).sort((a,b)=>a.row-b.row),
++    'Contact verification needed':leads.filter(l=>isCallbackState(l,'contact verification needed')).sort((a,b)=>a.row-b.row),
++    'Stale callback / remove':leads.filter(l=>isCallbackState(l,'stale callback/remove')).sort((a,b)=>a.row-b.row)
++  };
+   const dncToday=leads.filter(l=>(l.status||'').trim()==='DO NOT CALL'&&l.notes.some(n=>!n.legacy&&isToday(n.ts)));
+   const hotToday=leads.filter(l=>(l.status||'').trim()==='Hot Lead'&&l.notes.some(n=>!n.legacy&&isToday(n.ts)));
+-  const uncalled=leads.filter(l=>!l.notes.length&&!(l.status||'').trim()).sort((a,b)=>{
++  const uncalled=leads.filter(l=>!l.notes.length&&(!((l.status||'').trim())||(l.status||'').trim()==='Uncalled')).sort((a,b)=>{
+     const pa=(a.priority||'').toLowerCase().includes('top')?0:1;
+     const pb=(b.priority||'').toLowerCase().includes('top')?0:1;
+     if(pa!==pb)return pa-pb;
+@@ -2502,16 +2597,28 @@ function generateHandover(){
+   const lines=[];
+   lines.push(`# AresFit Dialer Handover - ${new Date().toLocaleString('en-GB')}`);
+   lines.push('');
+-  lines.push(`**Session stats:** ${todayCalls.length} calls logged · ${contactPct}% contact · ${hotToday.length} new hot · ${callbackRows.length} callback status rows`);
++  lines.push(`**Session stats:** ${todayCalls.length} calls logged - ${contactPct}% contact - ${hotToday.length} new hot - ${callbackRows.length} active call-now callbacks`);
+   lines.push(`**Emails sent today:** ${subjUsedToday.length} (subjects used: ${subjUsedToday.map(s=>`"${s}"`).join(', ')||'none'})`);
+   lines.push('');
+   lines.push('## Today\'s calls');
+   if(!todayCalls.length)lines.push('_No calls logged today._');
+   else todayCalls.forEach(({l,n})=>lines.push(`- **R${l.row} ${l.business}** · Lead_ID: ${getLeadId(l)||'-'} · ${n.dmy} ${n.hm} · **${n.outcome}** - ${n.text}`));
+   lines.push('');
+-  lines.push('## Outstanding callbacks (all rows with Callback status)');
++  lines.push('## Outstanding callbacks (active call-now only)');
+   if(!callbackRows.length)lines.push('_None._');
+-  else callbackRows.forEach(l=>lines.push(`- **R${l.row} ${l.business}** · Lead_ID: ${getLeadId(l)||'-'} · ${l.cbDate?(l.cbDate||'').replace('T',' '):'no scheduled time'} · DM: ${l.dm||'?'} · ${format443(l.phone)}`));
++  else callbackRows.forEach(l=>lines.push(`- **R${l.row} ${l.business}** - Lead_ID: ${getLeadId(l)||'-'} - ${l.cbDate?(l.cbDate||'').replace('T',' '):'no scheduled time'} - DM: ${l.dm||'?'} - ${format443(l.phone)}`));
++  lines.push('');
++  lines.push('## Callback queue state split');
++  Object.keys(callbackGroups).forEach(name=>{
++    const rows=callbackGroups[name];
++    lines.push(`### ${name}`);
++    if(!rows.length)lines.push('_None._');
++    else rows.forEach(l=>{
++      const c=classifyCallbackState(l);
++      lines.push(`- **R${l.row} ${l.business}** - Lead_ID: ${getLeadId(l)||'-'} - ${c.detail||c.state}`);
++    });
++    lines.push('');
++  });
+   lines.push('');
+   lines.push('## Hot leads added today');
+   if(!hotToday.length)lines.push('_None._');
+@@ -2530,7 +2637,7 @@ function generateHandover(){
+ }
+ function showHandover(){const md=generateHandover();document.getElementById('handover-body').textContent=md;document.getElementById('handover-modal').style.display='flex'}
+ function copyHandover(){copyToClipboard(document.getElementById('handover-body').textContent);flashDot(true);showToast('✅ Handover copied to clipboard')}
+-function downloadHandover(){const md=document.getElementById('handover-body').textContent;const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const ts=new Date();a.download=`handover-${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.md`;a.click()}
++function downloadHandover(){const md=document.getElementById('handover-body').textContent;const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});downloadBlob(`handover-${exportStampLong(new Date())}.md`,blob)}
+ function closeHandover(){document.getElementById('handover-modal').style.display='none'}
+ 
+ // ===== Subject pool editor =====
+@@ -2570,7 +2677,12 @@ function tapCall(which){
+   if(!digits){alert('No phone number on this row');return}
+   // Mobile gate now applies to phone2 too - was only enforced on primary before.
+   if(digits.startsWith('07')&&!l.mobileVerified){alert('Mobile number - tick "verified on website" before dialling.');return}
+-  if(isFreshDial(l)&&!canStartFreshDials()){
++  const gate=dialGateState(l);
++  if(gate.state==='blocked'){
++    alert(gate.message||'This row cannot be called');
++    return;
++  }
++  if(gate.state==='fresh-blocked'){
+     alert('Fresh dials blocked. Review warm queue and blockers first, or add an override reason in Settings.');
+     openSettings();
+     return;
+@@ -2869,9 +2981,7 @@ function saveTime(){
+ }
+ 
+ // ===== Export =====
+-function exportCSV(){
+-  if(!leads.length){alert('No leads');return}
+-  if(!user.name){openSetup();alert('Set sender name before exporting CSV');return}
++function buildCsvLines(){
+   // Reconstruct 22-column rows. Use original raw[] as source of truth for legacy cols,
+   // overwriting only the mapped 14 with current lead state.
+   const cols=SHEET_COLS;
+@@ -2921,11 +3031,91 @@ function exportCSV(){
+     // Write line using the same column list as the header.
+     lines.push(cols.map(h=>csvEscape(rowObj[h]||'')).join(','));
+   });
+-  const csv=lines.join('\n');
++  return lines;
++}
++function generateCsvText(){return buildCsvLines().join('\n')}
++function downloadBlob(filename,blob){
++  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
++}
++function crc32(bytes){
++  if(!crc32.table){
++    crc32.table=new Uint32Array(256);
++    for(let n=0;n<256;n++){
++      let c=n;
++      for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);
++      crc32.table[n]=c>>>0;
++    }
++  }
++  let c=0xffffffff;
++  for(const b of bytes)c=crc32.table[(c^b)&0xff]^(c>>>8);
++  return (c^0xffffffff)>>>0;
++}
++function zipDosParts(date=new Date()){
++  const time=(date.getHours()<<11)|(date.getMinutes()<<5)|Math.floor(date.getSeconds()/2);
++  const day=(date.getFullYear()-1980)<<9|((date.getMonth()+1)<<5)|date.getDate();
++  return{time,day};
++}
++function le16(n){return [n&255,(n>>>8)&255]}
++function le32(n){return [n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]}
++function concatBytes(parts){
++  const total=parts.reduce((sum,p)=>sum+p.length,0);
++  const out=new Uint8Array(total);
++  let offset=0;
++  parts.forEach(p=>{out.set(p,offset);offset+=p.length});
++  return out;
++}
++function createZipBlob(files){
++  const enc=new TextEncoder();
++  const localParts=[];const centralParts=[];
++  let offset=0;
++  const {time,day}=zipDosParts();
++  files.forEach(file=>{
++    const name=enc.encode(file.name);
++    const data=enc.encode(file.text);
++    const crc=crc32(data);
++    const local=concatBytes([
++      new Uint8Array(le32(0x04034b50)),new Uint8Array(le16(20)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),
++      new Uint8Array(le16(time)),new Uint8Array(le16(day)),new Uint8Array(le32(crc)),new Uint8Array(le32(data.length)),new Uint8Array(le32(data.length)),
++      new Uint8Array(le16(name.length)),new Uint8Array(le16(0)),name,data
++    ]);
++    const central=concatBytes([
++      new Uint8Array(le32(0x02014b50)),new Uint8Array(le16(20)),new Uint8Array(le16(20)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),
++      new Uint8Array(le16(time)),new Uint8Array(le16(day)),new Uint8Array(le32(crc)),new Uint8Array(le32(data.length)),new Uint8Array(le32(data.length)),
++      new Uint8Array(le16(name.length)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),
++      new Uint8Array(le32(0)),new Uint8Array(le32(offset)),name
++    ]);
++    localParts.push(local);centralParts.push(central);offset+=local.length;
++  });
++  const centralStart=offset;
++  const central=concatBytes(centralParts);
++  const end=concatBytes([
++    new Uint8Array(le32(0x06054b50)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),new Uint8Array(le16(files.length)),new Uint8Array(le16(files.length)),
++    new Uint8Array(le32(central.length)),new Uint8Array(le32(centralStart)),new Uint8Array(le16(0))
++  ]);
++  return new Blob([concatBytes(localParts.concat([central,end]))],{type:'application/zip'});
++}
++function exportCSV(){
++  if(!leads.length){alert('No leads');return}
++  if(!user.name){openSetup();alert('Set sender name before exporting CSV');return}
++  const csv=generateCsvText();
+   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+   const fn=getExportFileName();
+-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click();
++  downloadBlob(fn,blob);
++  flashDot(true);
++}
++function exportSessionPackage(){
++  if(!leads.length){alert('No leads');return}
++  if(!user.name){openSetup();alert('Set sender name before exporting package');return}
++  const d=new Date();
++  const stampShort=exportStampShort(d);
++  const stampLong=exportStampLong(d);
++  const zip=createZipBlob([
++    {name:`handover-${stampLong}.md`,text:generateHandover()},
++    {name:`AresFit_Call_Sheet_${stampLong}.csv`,text:'\ufeff'+generateCsvText()}
++  ]);
++  downloadBlob(`AresFit_Session_Package_${stampShort}.zip`,zip);
+   flashDot(true);
++  showToast('Exported handover + CSV package');
+ }
+ function autoBackup(){if(!leads.length)return;exportCSV()}
+ function manualBackup(){exportCSV()}
