@@ -1,0 +1,7 @@
+/aresfit-dialer-sandde-v2.html text eol=lf
+/index.html text eol=lf
+/tests/*.mjs text eol=lf
+/versions/**/*.html binary
+/versions/2026-07-22-original-restore-c346ce1/*.html binary
+/versions/2026-07-23-pre-upload-centering-f711a45/*.html binary
+/versions/2026-07-26-pre-retry-7b9ed09/*.html binary
