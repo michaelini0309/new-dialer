@@ -933,8 +933,8 @@ body.light-mode .number-research-link{border-color:rgba(13,107,42,.42);backgroun
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.09.21.4';
-const RELEASE_ID = '20260921-google-calendar-sync-r4';
+const APP_BUILD = '2026.09.21.5';
+const RELEASE_ID = '20260921-google-calendar-sync-r5';
 const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1';
 const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
 const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
@@ -1495,6 +1495,14 @@ function callbackDisplayParts(value){
     if(!callbackPartsValid(y,mo,d,h,mi,0,true))return{ok:false,label:'Invalid callback date'};
     return{ok:true,y,mo,d,h,mi,hasTime:true};
   }
+  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-?\s*(EARLY|MORNING|AM|MIDDAY|AFTERNOON|PM|EVENING)$/i);
+  if(m){
+    const d=+m[1],mo=+m[2],y=+m[3],part=m[4].toUpperCase();
+    const times={EARLY:[8,0],MORNING:[9,0],AM:[9,0],MIDDAY:[12,0],AFTERNOON:[15,0],PM:[15,0],EVENING:[17,0]};
+    const [h,mi]=times[part]||[9,0];
+    if(!callbackPartsValid(y,mo,d,h,mi,0,true))return{ok:false,label:'Invalid callback date'};
+    return{ok:true,y,mo,d,h,mi,hasTime:true};
+  }
   m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if(m){
     const d=+m[1],mo=+m[2],y=+m[3];
@@ -1873,10 +1881,11 @@ function renderGoogleCalendarSettings(){
   const invalid=googleCalendarInvalidCount();
   const error=gcalLastErrorText?' · ERROR: '+gcalLastErrorText:'';
   const invalidText=invalid?' · '+invalid+' callback date'+(invalid===1?'':'s')+' not understood':'';
+  const sourceText=sourceMeta.fileName?' · '+sourceMeta.fileName:'';
   if(googleCalendarConnected()){
-    status.textContent='Connected · '+pending+' callback'+(pending===1?'':'s')+' available to sync'+(gcalLastSyncText?' · '+gcalLastSyncText:'')+invalidText+error;
+    status.textContent='Connected'+sourceText+' · '+pending+' callback'+(pending===1?'':'s')+' available to sync'+(gcalLastSyncText?' · '+gcalLastSyncText:'')+invalidText+error;
   }else if(googleCalendarClientId()){
-    status.textContent='Client ID saved · Calendar not connected'+(pending?' · '+pending+' callback'+(pending===1?'':'s')+' waiting to sync':'')+invalidText+error;
+    status.textContent='Client ID saved · Calendar not connected'+sourceText+(pending?' · '+pending+' callback'+(pending===1?'':'s')+' waiting to sync':'')+invalidText+error;
   }else{
     status.textContent='Add your Google OAuth Client ID, then connect. Existing imported callback dates will sync after connection.'+invalidText;
   }
@@ -1935,6 +1944,7 @@ async function connectGoogleCalendar(){
   try{
     await requestGoogleCalendarToken('consent');
     gcalLastErrorText='';
+    await ensureCalendarLeadsLoaded();
     renderGoogleCalendarSettings();
     showToast('Google Calendar connected');
     gcalPendingFullSync=true;
@@ -2083,9 +2093,24 @@ function queueGoogleCalendarDelete(l){
   if(!l||!googleCalendarConnected())return;
   setTimeout(()=>deleteLeadFromGoogleCalendar(l,{quiet:true}).catch(err=>showToast(err&&err.message?err.message:'Google Calendar delete failed','danger')),0);
 }
+async function ensureCalendarLeadsLoaded(){
+  if(leads.length)return true;
+  if(await hasStoredSession()){
+    await loadSession();
+    return leads.length>0;
+  }
+  return false;
+}
 async function syncAllCallbacksToGoogleCalendar(options){
   const opts=options||{};
   if(gcalSyncRunning)return;
+  const haveLeads=await ensureCalendarLeadsLoaded();
+  if(!haveLeads){
+    gcalLastSyncText='no call sheet loaded';
+    renderGoogleCalendarSettings();
+    if(opts.manual)showToast('Google Calendar: no call sheet loaded or stored','danger');
+    return;
+  }
   if(!googleCalendarConnected()){
     gcalPendingFullSync=true;
     renderGoogleCalendarSettings();
